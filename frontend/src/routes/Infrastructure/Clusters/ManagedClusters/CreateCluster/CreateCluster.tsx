@@ -66,7 +66,9 @@ import { useLocalHubName } from '../../../../../hooks/use-local-hub'
 import './style.css'
 import { VALID_DNS_LABEL } from '../../../../../components/TemplateEditor/utils/validation-types'
 import { getPlatform } from './components/assisted-installer/hypershift/utils'
-
+import { getUsername } from '../../../../../lib/username'
+import { isRequestAbortedError } from '../../../../../resources/utils'
+import React from 'react'
 // Register the custom 'and' helper
 Handlebars.registerHelper('and', function (a, b) {
   return a && b
@@ -106,6 +108,59 @@ const wizardBody = css({
 })
 
 export default function CreateCluster(props: { infrastructureType: ClusterInfrastructureType }) {
+
+  const [userIsOpen, userSetOpen] = useState<boolean>(false)
+    const [name, setName] = useState<string>('loading...')
+    console.log("DAZA USERNAME name", name)
+    useEffect(() => {
+      // Get the username from the console backend
+      const resp = getUsername()
+      console.log("DAZA USERNAME", resp)
+      resp.promise
+        .then((payload) => {
+          setName(payload.body.username ?? 'undefined')
+        })
+        .catch((error) => {
+          if (!isRequestAbortedError(error)) {
+            setName('undefined')
+          }
+        })
+      return resp.abort
+    }, [])
+
+  React.useEffect(() => {
+    const fetchData = async () => {
+    const myToken = 'eyJhbGciOiJIUzUxMiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICI0NzQzYTkzMC03YmJiLTRkZGQtOTgzMS00ODcxNGRlZDc0YjUifQ.eyJpYXQiOjE3NjUzODUxMjQsImp0aSI6IjYwMjFmNmI1LTU2Y2EtNDdlNy1hMDg0LTZkOTliYTQxN2RjMiIsImlzcyI6Imh0dHBzOi8vc3NvLnJlZGhhdC5jb20vYXV0aC9yZWFsbXMvcmVkaGF0LWV4dGVybmFsIiwiYXVkIjoiaHR0cHM6Ly9zc28ucmVkaGF0LmNvbS9hdXRoL3JlYWxtcy9yZWRoYXQtZXh0ZXJuYWwiLCJzdWIiOiJmOjUyOGQ3NmZmLWY3MDgtNDNlZC04Y2Q1LWZlMTZmNGZlMGNlNjpkYXpuYXVyby1vY20iLCJ0eXAiOiJPZmZsaW5lIiwiYXpwIjoiY2xvdWQtc2VydmljZXMiLCJub25jZSI6ImYxZWEzZGMwLWQ2NTEtNDUwOS1hZDg1LWRlYmY0M2Y1MzEzZSIsInNpZCI6IjYwNjMyNWYyLWM5OTgtNDY4MS1iNGU4LWMzZjE5ODM5YzZlZiIsInNjb3BlIjoib3BlbmlkIGJhc2ljIHJvbGVzIHdlYi1vcmlnaW5zIGNsaWVudF90eXBlLnByZV9rYzI1IG9mZmxpbmVfYWNjZXNzIn0.Ohpg-r4X7Sev68_HSP5sF8A78atM5hIcbKhqAxOKk2GNxTLavZN2MXGM0ucanMQwVh3gI_JMKfqjNPa6YlkNVA'
+
+      try {
+        const response = await fetch('https://api.stage.openshift.com/api/accounts_mgmt/v1/current_account', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${myToken}`,
+            Referer: 'https://console.dev.redhat.com/',
+            Origin: 'https://console.dev.redhat.com/',
+            'Access-Control-Allow-Origin':'*'
+          }
+        });
+
+        console.log("DAZA RESPONSE", response)
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        console.log("DAZA RESULT", result)
+        //setData(result); // Set the data state
+
+      } catch (err) {
+        console.log("DAZA ERROR HAPPENED", err)
+      }
+    };
+
+    fetchData();
+  }, [])
+
+
   const { infrastructureType } = props
   const navigate = useNavigate()
   const { back, cancel } = useBackCancelNavigation()
@@ -349,6 +404,8 @@ export default function CreateCluster(props: { infrastructureType: ClusterInfras
   Handlebars.registerHelper('append', append)
   Handlebars.registerHelper('getName', getName)
   Handlebars.registerHelper('escapeYAML', (value) => jsyaml.dump(Array.isArray(value) ? value[0] : value))
+
+  console.log("I AM TEMPLATE", template)
 
   const { canJoinClusterSets } = useCanJoinClusterSets()
   const mustJoinClusterSet = useMustJoinClusterSet()

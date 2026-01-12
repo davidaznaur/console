@@ -50,6 +50,7 @@ const Search = lazy(() => import('./routes/Search/Search'))
 const Clusters = lazy(() => import('./routes/Infrastructure/Clusters/Clusters'))
 const Automations = lazy(() => import('./routes/Infrastructure/Automations/Automations'))
 const InfraEnvironments = lazy(() => import('./routes/Infrastructure/InfraEnvironments/InfraEnvironments'))
+const PersesDashboard = lazy(() => import('./routes/Infrastructure/Dashboards/PersesPoc/PersesDashboard'))
 
 // GOVERNANCE
 const Governance = lazy(() => import('./routes/Governance/Governance'))
@@ -81,9 +82,11 @@ interface IRouteGroup {
 function UserDropdown() {
   const [userIsOpen, userSetOpen] = useState<boolean>(false)
   const [name, setName] = useState<string>('loading...')
+  console.log("DAZA USERNAME name", name)
   useEffect(() => {
     // Get the username from the console backend
     const resp = getUsername()
+    console.log("DAZA USERNAME", resp)
     resp.promise
       .then((payload) => {
         setName(payload.body.username ?? 'undefined')
@@ -95,7 +98,7 @@ function UserDropdown() {
       })
     return resp.abort
   }, [])
-
+console.log("DAZA USERNAME name", name)
   function configureClient() {
     // Get the user token endpoint from the console backend to launch to the OCP Display Token page
     const resp = configure()
@@ -198,6 +201,13 @@ const routes: (IRoute | IRouteGroup)[] = [
         match: MatchType.SubRoutes,
         element: <InfraEnvironments />,
       },
+      {
+        title: 'Perses Dashboard',
+        type: 'route',
+        path: NavigationPath.persesDashboard,
+        match: MatchType.SubRoutes,
+        element: <PersesDashboard />,
+      },
     ],
   },
   {
@@ -292,7 +302,7 @@ export default function App() {
             </AcmToastProvider>
           </LoadPluginData>
         </Page>
-        <ReactQueryDevtools initialIsOpen={false} position="bottom-right" panelPosition="bottom" />
+        <ReactQueryDevtools initialIsOpen={true} position="bottom-right" panelPosition="bottom" />
       </BrowserRouter>
     </PluginDataContextProvider>
   )

@@ -13,5 +13,6 @@ export type IUsernameResult = {
 
 export function getUsername() {
   const url = getBackendUrl() + usernameUrl
+  console.log("DAZA URL", url)
   return getRequest<IUsernameResult>(url)
 }

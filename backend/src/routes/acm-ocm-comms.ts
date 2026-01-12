@@ -8,21 +8,6 @@ import { getAuthenticatedToken } from '../lib/token'
 import { ResourceList } from '../resources/resource-list'
 import { Secret } from '../resources/secret'
 import { getProxyAgent } from '../lib/agent'
-import { constants } from 'http2'
-import { HeadersInit } from 'node-fetch'
-import { fetchRetry } from '../lib/fetch-retry'
-const { HTTP2_HEADER_CONTENT_TYPE, HTTP2_HEADER_ACCEPT } = constants
-
-
-export interface AuthTokenResponse {
-  access_token: string
-  expires_in: number
-  refresh_expires_in: number
-  refresh_token?: string
-  token_type: string
-  id_token?: string
-  scope?: string
-}
 interface Credential {
   auths: {
     'cloud.openshift.com': {
@@ -35,11 +20,12 @@ interface UpgradeRiskBody {
   clusterIds: string[]
 }
 
-export async function upgradeRiskPredictions(req: Http2ServerRequest, res: Http2ServerResponse): Promise<void> {
+export async function acmOcmComms(req: Http2ServerRequest, res: Http2ServerResponse): Promise<void> {
   const token = await getAuthenticatedToken(req, res)
   if (token) {
     const serviceAccountToken = getServiceAccountToken()
- console.log("DAVID ****************************")
+
+    console.log("DAVID ****************************")
 console.log(serviceAccountToken)
 
     console.log("DAVID ****************************")
@@ -71,7 +57,7 @@ console.log(serviceAccountToken)
         // https://github.com/RedHatInsights/insights-results-smart-proxy/blob/master/server/router_utils.go#L168
         const userAgent = 'acm-operator/v2.10.0 cluster/acm-hub'
         const insightsPath = 'https://console.redhat.com/api/insights-results-aggregator/v2/upgrade-risks-prediction'
-        
+
         // create array of clusterIds with length of 100
         const clusterIds = body.clusterIds.reduce((resultArray: string[][], item, index) => {
           const chunkIndex = Math.floor(index / 100)
@@ -82,45 +68,6 @@ console.log(serviceAccountToken)
           return resultArray
         }, [])
 
-
-
-
-const ssoPath = 'https://sso.redhat.com/auth/realms/redhat-external/protocol/openid-connect/token'
-
-
-const formData = new URLSearchParams({
-  grant_type: 'client_credentials',
-  client_id: '267c1012-604d-4f50-9b75-e1c3ebabc43c',
-  client_secret: 'kjhixNWGoUICvJ7e8lqnXpgIO7tuvGEX',
-})
-
-const headers: HeadersInit = {
-  [HTTP2_HEADER_CONTENT_TYPE]: 'application/x-www-form-urlencoded',
-  [HTTP2_HEADER_ACCEPT]: 'application/json',
-}
-
-const ssoResponse = await fetchRetry(ssoPath, {
-  method: 'POST',
-  headers,
-  body: formData.toString(),
-})
-
-if (!ssoResponse.ok) {
-  const errorText = await ssoResponse.text()
-  throw new Error(`Token exchange failed (${ssoResponse.status}): ${errorText}`)
-}
-
-const bodyRes = await ssoResponse.json();
-
-const accessTokenSSO = bodyRes.access_token
-const accountPath = 'https://api.openshift.com/api/accounts_mgmt/v1/organizations/1wuANBLgbvRSXRXN10OuSFE2gzB/labels'
-const accReq = await jsonRequest(accountPath, accessTokenSSO).catch((err: Error) => {
-  logger.error({msg: "Error gettting account info", error: err.message})
-})
-console.log("DADA ********************")
-console.log("DADA ********************", accReq)
-console.log("DADA ********************")
-       //1wuANBLgbvRSXRXN10OuSFE2gzB
         // Create req for each 100 id chunk
         const reqs = clusterIds.map((idChunk: string[]) => {
           return jsonPost(insightsPath, { clusters: idChunk }, crcToken, userAgent, getProxyAgent()).catch(

@@ -30,6 +30,9 @@ export const LoadPluginData = (props: { children?: ReactNode }) => {
       // Infrastructure
       NavigationPath.infrastructure,
 
+      //Dashboards
+      NavigationPath.persesDashboard,
+
       // Infrastructure - Clusters - Managed Clusters
       NavigationPath.clusters,
       NavigationPath.managedClusters,

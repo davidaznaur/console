@@ -569,7 +569,7 @@ export function LoadData(props: { children?: ReactNode }) {
     startPolling: globalHubStartPoll,
     stopPolling: globalHubStopPoll,
   } = useQuery(globalHubQueryFn, [{ isGlobalHub: false, localHubName: 'local-cluster', isHubSelfManaged: undefined }], {
-    pollInterval: 30,
+    pollInterval: 30000,
   })
 
   // Start all Polls for Global values here
@@ -625,6 +625,7 @@ export function LoadData(props: { children?: ReactNode }) {
         headers: { accept: 'application/json' },
       })
         .then((res) => {
+          console.log("RES", res)
           switch (res.status) {
             case 200:
               break

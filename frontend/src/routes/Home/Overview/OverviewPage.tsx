@@ -26,6 +26,7 @@ import { useVirtualMachineDetection } from '../../../hooks/useVirtualMachineDete
 import { useTranslation } from '../../../lib/acm-i18next'
 import { DOC_LINKS } from '../../../lib/doc-util'
 import { getUpgradeRiskPredictions } from '../../../lib/get-upgrade-risk-predictions'
+import { getAcmOcmComms } from '../../../lib/get-acm-ocm-comms'
 import { SupportedAggregate, useAggregate } from '../../../lib/useAggregates'
 import { ObservabilityEndpoint, PrometheusEndpoint, useMetricsPoll } from '../../../lib/useMetricsPoll'
 import { NavigationPath } from '../../../NavigationPath'
@@ -102,7 +103,7 @@ export default function OverviewPage(props: Readonly<{ selectedClusterLabels: Re
   const [upgradeRiskPredictions, setUpgradeRiskPredictions] = useState<any[]>([])
   const [isUserPreferenceLoading, setIsUserPreferenceLoading] = useState(true)
   const [userPreference, setUserPreference] = useState<UserPreference | undefined>(undefined)
-
+  console.log("DAVID upgradeRiskPredictions", upgradeRiskPredictions)
   const grafanaRoute = useMemo(() => {
     const obsAddOn = clusterManagementAddons.filter(
       (cma) =>

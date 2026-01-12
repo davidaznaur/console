@@ -27,6 +27,7 @@ import { readiness } from './routes/readiness'
 import { search } from './routes/search'
 import { serveHandler } from './routes/serve'
 import { upgradeRiskPredictions } from './routes/upgrade-risks-prediction'
+import { acmOcmComms } from './routes/acm-ocm-comms'
 import { username } from './routes/username'
 import { userpreference } from './routes/userpreference'
 import { virtualMachineGETProxy, virtualMachineProxy, vmResourceUsageProxy } from './routes/virtualMachineProxy'
@@ -74,6 +75,7 @@ router.get('/hub', hub)
 router.get('/hypershift-status', hypershiftStatus)
 router.get('/cluster-version', clusterVersion)
 router.post('/upgrade-risks-prediction', upgradeRiskPredictions)
+router.post('/acmocmcoms', acmOcmComms)
 router.post('/aggregate/*', aggregate)
 router.get('/virtualmachines/get/*', virtualMachineGETProxy)
 router.all('/virtualmachines/*', virtualMachineProxy)

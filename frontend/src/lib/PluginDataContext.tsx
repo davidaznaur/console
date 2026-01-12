@@ -65,6 +65,8 @@ export const usePluginDataContextValue = () => {
     }),
     [backendUrl, loadStarted, loadCompleted, startLoading]
   )
+
+  console.log("CONTEXT", contextValue)
   return contextValue
 }
 

@@ -126,6 +126,9 @@ export enum NavigationPath {
   infraEnvironmentHosts = '/multicloud/infrastructure/environments/details/:namespace/:name/hosts',
   infraEnvironmentOverview = '/multicloud/infrastructure/environments/details/:namespace/:name/overview',
 
+  // Infrastructure - Dashboards
+  persesDashboard = '/multicloud/infrastructure/dashboards/perses',
+
   // Infrastructure - Automations
   ansibleAutomations = '/multicloud/infrastructure/automations',
   addAnsibleAutomation = '/multicloud/infrastructure/automations/add',
