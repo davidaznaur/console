@@ -10,7 +10,6 @@ import {
   PodStatusSummary,
   ResourceSummary,
   SearchResultItem,
-  ISearchResult,
 } from './types'
 import {
   getClusters,
@@ -203,7 +202,7 @@ export function useDashboardData(refreshInterval?: number): {
       ] = await Promise.all([
         getClusterSummary(),
         getPodStatusSummary(),
-        getResourceSummary(['Deployment', 'Service', 'ConfigMap', 'Secret', 'StatefulSet', 'DaemonSet']),
+        getResourceSummary(['Deployment', 'DaemonSet', 'StatefulSet', 'ReplicaSet', 'Job', 'Service', 'ConfigMap', 'Secret']),
         getClusters().promise,
         getNodes().promise,
         getDeployments().promise,

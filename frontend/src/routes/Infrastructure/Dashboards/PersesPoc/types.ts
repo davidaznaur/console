@@ -230,3 +230,39 @@ export interface TablePanelProps extends DashboardPanelProps {
   rows: Record<string, unknown>[]
 }
 
+
+// Dashboard Filter Types
+export interface DashboardFilterState {
+  clusters: string[]
+  namespaces: string[]
+  kinds: string[]
+  labels: string[]
+  searchText: string
+}
+
+export interface DashboardFilterOptions {
+  availableClusters: string[]
+  availableNamespaces: string[]
+  availableKinds: string[]
+}
+
+export const DEFAULT_WORKLOAD_KINDS = [
+  "Deployment",
+  "DaemonSet",
+  "StatefulSet",
+  "ReplicaSet",
+  "Job",
+  "Pod",
+  "Service",
+  "ConfigMap",
+  "Secret",
+  "VirtualMachine",
+]
+
+export const DEFAULT_FILTER_STATE: DashboardFilterState = {
+  clusters: [],
+  namespaces: [],
+  kinds: [],
+  labels: [],
+  searchText: "",
+}

@@ -3,9 +3,10 @@
 /**
  * Perses Dashboard View Component
  * This component renders a Perses dashboard using the actual Perses library
+ * with Search API filtering capabilities
  */
 
-import React, { useMemo, useState, useEffect, useCallback } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import {
   Page,
   PageSection,
@@ -28,248 +29,30 @@ import {
   Grid,
   GridItem,
   Divider,
+  Badge,
 } from '@patternfly/react-core'
 import { SyncAltIcon } from '@patternfly/react-icons'
 import { DashboardResource } from '@perses-dev/core'
+import { ChartsProvider, testChartsTheme } from '@perses-dev/components'
 
 // Import dashboard definition
 import { createACMOverviewDashboard } from './ACMDashboardDefinition'
 
-// Import ACM datasource functions
+// Import filter components and hooks
+import { DashboardFilters } from '../components/DashboardFilters'
+import { useFilteredDashboardData } from '../useFilteredDashboardData'
+import { DashboardFilterState, DEFAULT_FILTER_STATE } from '../types'
+
+// Import Perses chart components
 import {
-  getClusterSummary,
-  getPodStatusSummary,
-  getNodes,
-  getClusters,
-  getDeployments,
-  getResourceCounts,
-  SearchResultItem,
-} from './ACMDatasource'
-
-// Types for dashboard data
-interface DashboardData {
-  clusterSummary: {
-    total: number
-    available: number
-    unavailable: number
-    unknown: number
-  } | null
-  podSummary: {
-    running: number
-    pending: number
-    failed: number
-    succeeded: number
-    error: number
-    unknown: number
-  } | null
-  clusters: SearchResultItem[]
-  nodes: SearchResultItem[]
-  deployments: SearchResultItem[]
-  resourceCounts: Record<string, number>
-}
+  PersesBarChart,
+  PersesPieChart,
+  PersesStatChart,
+  PersesHorizontalBarChart,
+} from '../components/PersesCharts'
 
 /**
- * Simple Stat Panel Component using Perses styling
- */
-function StatPanel({
-  title,
-  value,
-  color,
-  loading,
-}: {
-  title: string
-  value: number | string
-  color?: string
-  loading?: boolean
-}) {
-  return (
-    <Card isCompact style={{ height: '120px' }}>
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-      </CardHeader>
-      <CardBody>
-        {loading ? (
-          <Spinner size="lg" />
-        ) : (
-          <div
-            style={{
-              fontSize: '2.5rem',
-              fontWeight: 'bold',
-              color: color || 'var(--pf-v5-global--primary-color--100)',
-              textAlign: 'center',
-            }}
-          >
-            {value}
-          </div>
-        )}
-      </CardBody>
-    </Card>
-  )
-}
-
-/**
- * Bar Chart Panel using Perses-style visualization
- */
-function BarChartPanel({
-  title,
-  data,
-  loading,
-}: {
-  title: string
-  data: { label: string; value: number; color?: string }[]
-  loading?: boolean
-}) {
-  const maxValue = Math.max(...data.map((d) => d.value), 1)
-  const colors = [
-    '#0066CC', '#4CB140', '#F0AB00', '#C9190B', '#6753AC', '#009596',
-  ]
-
-  return (
-    <Card isCompact style={{ height: '100%' }}>
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-      </CardHeader>
-      <CardBody>
-        {loading ? (
-          <Spinner size="lg" />
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {data.map((item, index) => (
-              <div key={item.label}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                  <span style={{ fontSize: '0.875rem' }}>{item.label}</span>
-                  <span style={{ fontSize: '0.875rem', fontWeight: 'bold' }}>{item.value}</span>
-                </div>
-                <div
-                  style={{
-                    width: '100%',
-                    height: '12px',
-                    backgroundColor: '#f0f0f0',
-                    borderRadius: '4px',
-                    overflow: 'hidden',
-                  }}
-                >
-                  <div
-                    style={{
-                      width: `${(item.value / maxValue) * 100}%`,
-                      height: '100%',
-                      backgroundColor: item.color || colors[index % colors.length],
-                      borderRadius: '4px',
-                      transition: 'width 0.3s ease',
-                    }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </CardBody>
-    </Card>
-  )
-}
-
-/**
- * Pie Chart Panel using SVG
- */
-function PieChartPanel({
-  title,
-  data,
-  loading,
-}: {
-  title: string
-  data: { label: string; value: number; color: string }[]
-  loading?: boolean
-}) {
-  const total = data.reduce((sum, item) => sum + item.value, 0)
-  const size = 140
-  const radius = 60
-  const strokeWidth = 20
-
-  let cumulativePercent = 0
-  const segments = data.map((item) => {
-    const percent = total > 0 ? item.value / total : 0
-    const startAngle = cumulativePercent * 360
-    cumulativePercent += percent
-    const endAngle = cumulativePercent * 360
-    return { ...item, percent, startAngle, endAngle }
-  })
-
-  return (
-    <Card isCompact style={{ height: '100%' }}>
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-      </CardHeader>
-      <CardBody>
-        {loading ? (
-          <Spinner size="lg" />
-        ) : (
-          <Flex alignItems={{ default: 'alignItemsCenter' }} justifyContent={{ default: 'justifyContentCenter' }}>
-            <FlexItem>
-              <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-                {segments.map((segment, index) => {
-                  const circumference = 2 * Math.PI * radius
-                  const dashLength = segment.percent * circumference
-                  const dashOffset = -segments.slice(0, index).reduce((sum, s) => sum + s.percent, 0) * circumference
-
-                  return (
-                    <circle
-                      key={segment.label}
-                      cx={size / 2}
-                      cy={size / 2}
-                      r={radius}
-                      fill="none"
-                      stroke={segment.color}
-                      strokeWidth={strokeWidth}
-                      strokeDasharray={`${dashLength} ${circumference}`}
-                      strokeDashoffset={dashOffset}
-                      transform={`rotate(-90 ${size / 2} ${size / 2})`}
-                    />
-                  )
-                })}
-                <text
-                  x={size / 2}
-                  y={size / 2}
-                  textAnchor="middle"
-                  dominantBaseline="middle"
-                  style={{ fontSize: '1.5rem', fontWeight: 'bold' }}
-                >
-                  {total}
-                </text>
-              </svg>
-            </FlexItem>
-            <FlexItem>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginLeft: '16px' }}>
-                {data.map((item) => (
-                  <Flex key={item.label} alignItems={{ default: 'alignItemsCenter' }}>
-                    <FlexItem>
-                      <div
-                        style={{
-                          width: '12px',
-                          height: '12px',
-                          borderRadius: '50%',
-                          backgroundColor: item.color,
-                          marginRight: '8px',
-                        }}
-                      />
-                    </FlexItem>
-                    <FlexItem>
-                      <span style={{ fontSize: '0.875rem' }}>
-                        {item.label}: <strong>{item.value}</strong>
-                      </span>
-                    </FlexItem>
-                  </Flex>
-                ))}
-              </div>
-            </FlexItem>
-          </Flex>
-        )}
-      </CardBody>
-    </Card>
-  )
-}
-
-/**
- * Table Panel Component
+ * Table Panel Component (kept as custom since tables work well with PatternFly)
  */
 function TablePanel({
   title,
@@ -337,155 +120,349 @@ function TablePanel({
 }
 
 /**
- * Main Perses Dashboard View Component
+ * Main Perses Dashboard View Component with Search API Filtering
  */
 export function PersesDashboardView() {
   const [showInfo, setShowInfo] = useState(true)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<Error | null>(null)
-  const [data, setData] = useState<DashboardData>({
-    clusterSummary: null,
-    podSummary: null,
-    clusters: [],
-    nodes: [],
-    deployments: [],
-    resourceCounts: {},
-  })
+  const [filters, setFilters] = useState<DashboardFilterState>(DEFAULT_FILTER_STATE)
+
+  // Use the filtered dashboard data hook
+  const { data, filterOptions, loading, error, refetch } = useFilteredDashboardData(filters, 30000)
 
   // Get the dashboard definition
   const dashboardResource: DashboardResource = useMemo(() => createACMOverviewDashboard(), [])
 
-  // Fetch data function
-  const fetchData = useCallback(async () => {
-    try {
-      setLoading(true)
-      setError(null)
+  // Calculate active filter count for display
+  const activeFilterCount = useMemo(() => {
+    return (
+      filters.clusters.length +
+      filters.namespaces.length +
+      filters.kinds.length +
+      (filters.searchText ? 1 : 0)
+    )
+  }, [filters])
 
-      const [clusterSummary, podSummary, clusters, nodes, deployments, resourceCounts] = await Promise.all([
-        getClusterSummary(),
-        getPodStatusSummary(),
-        getClusters(),
-        getNodes(),
-        getDeployments(50),
-        getResourceCounts(['Deployment', 'Service', 'ConfigMap', 'Secret', 'StatefulSet', 'DaemonSet']),
-      ])
-
-      setData({
-        clusterSummary,
-        podSummary,
-        clusters,
-        nodes,
-        deployments,
-        resourceCounts,
-      })
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to fetch data'))
-    } finally {
-      setLoading(false)
+  // Parse "Kind: DaemonSet, Job" syntax from search text
+  const WORKLOAD_KINDS = ['Deployment', 'DaemonSet', 'StatefulSet', 'ReplicaSet', 'Job']
+  
+  const { searchTextKinds, cleanedSearchText } = useMemo(() => {
+    if (!filters.searchText) return { searchTextKinds: [], cleanedSearchText: '' }
+    
+    // Match "Kind:" or "kind:" followed by comma-separated values
+    const kindMatch = filters.searchText.match(/kind\s*:\s*([^|]+?)(?:\s*\||$)/i)
+    
+    if (kindMatch) {
+      const kindsPart = kindMatch[1]
+      // Split by comma and match against valid kinds
+      const parsedKinds = kindsPart
+        .split(',')
+        .map((k) => k.trim())
+        .filter((k) => WORKLOAD_KINDS.some((valid) => valid.toLowerCase() === k.toLowerCase()))
+        .map((k) => WORKLOAD_KINDS.find((valid) => valid.toLowerCase() === k.toLowerCase()) || k)
+      
+      // Remove the Kind: part from the search text
+      const remaining = filters.searchText.replace(/kind\s*:\s*[^|]+/i, '').replace(/^\s*\|\s*/, '').trim()
+      
+      return { searchTextKinds: parsedKinds, cleanedSearchText: remaining }
     }
-  }, [])
+    
+    // Fallback: detect kind names anywhere in text (original behavior)
+    const detectedKinds = WORKLOAD_KINDS.filter((kind) => 
+      filters.searchText.toLowerCase().includes(kind.toLowerCase())
+    )
+    
+    if (detectedKinds.length > 0) {
+      let remaining = filters.searchText
+      detectedKinds.forEach((kind) => {
+        const regex = new RegExp(kind, 'gi')
+        remaining = remaining.replace(regex, '')
+      })
+      return { searchTextKinds: detectedKinds, cleanedSearchText: remaining.replace(/\s+/g, ' ').trim() }
+    }
+    
+    return { searchTextKinds: [], cleanedSearchText: filters.searchText }
+  }, [filters.searchText])
 
-  // Initial fetch
-  useEffect(() => {
-    fetchData()
-  }, [fetchData])
+  // Combined kinds: from dropdown OR from search text
+  const effectiveKinds = useMemo(() => {
+    // If kinds are selected in dropdown, use those
+    if (filters.kinds.length > 0) return filters.kinds
+    // If kinds are mentioned in search text, use those
+    if (searchTextKinds.length > 0) return searchTextKinds
+    // Otherwise, no kinds filter (show nothing in workloads section)
+    return []
+  }, [filters.kinds, searchTextKinds])
+
+  // Check if a specific kind should be shown
+  const shouldShowKind = useCallback(
+    (kind: string) => effectiveKinds.includes(kind),
+    [effectiveKinds]
+  )
+
+  // Filter clusters by search text for all cluster-related visualizations
+  const filteredClusters = useMemo(() => {
+    let clusters = data.clusters || []
+    if (cleanedSearchText) {
+      const searchLower = cleanedSearchText.toLowerCase()
+      clusters = clusters.filter((cluster) =>
+        cluster.name.toLowerCase().includes(searchLower) ||
+        (cluster.kubernetesVersion && String(cluster.kubernetesVersion).toLowerCase().includes(searchLower)) ||
+        (cluster.cpu && String(cluster.cpu).toLowerCase().includes(searchLower)) ||
+        (cluster.memory && String(cluster.memory).toLowerCase().includes(searchLower))
+      )
+    }
+    return clusters
+  }, [data.clusters, cleanedSearchText])
+
+  // Filter nodes by search text for node-related visualizations
+  const filteredNodes = useMemo(() => {
+    let nodes = data.nodes || []
+    if (cleanedSearchText) {
+      const searchLower = cleanedSearchText.toLowerCase()
+      nodes = nodes.filter((node) =>
+        node.name.toLowerCase().includes(searchLower) ||
+        node.cluster.toLowerCase().includes(searchLower) ||
+        (node.role && String(node.role).toLowerCase().includes(searchLower)) ||
+        (node.status && String(node.status).toLowerCase().includes(searchLower))
+      )
+    }
+    return nodes
+  }, [data.nodes, cleanedSearchText])
 
   // Prepare data for visualizations
-  const clusterStatusData = useMemo(
-    () =>
-      data.clusterSummary
-        ? [
-            { label: 'Available', value: data.clusterSummary.available, color: '#3E8635' },
-            { label: 'Unavailable', value: data.clusterSummary.unavailable, color: '#C9190B' },
-            { label: 'Unknown', value: data.clusterSummary.unknown, color: '#F0AB00' },
-          ]
-        : [],
-    [data.clusterSummary]
-  )
+  const clusterStatusData = useMemo(() => {
+    // Recalculate cluster status from filtered clusters
+    const available = filteredClusters.filter((c) => c.ManagedClusterConditionAvailable === 'True').length
+    const unavailable = filteredClusters.filter((c) => c.ManagedClusterConditionAvailable === 'False').length
+    const unknown = filteredClusters.filter(
+      (c) => c.ManagedClusterConditionAvailable !== 'True' && c.ManagedClusterConditionAvailable !== 'False'
+    ).length
+
+    return [
+      { label: 'Available', value: available, color: '#3E8635' },
+      { label: 'Unavailable', value: unavailable, color: '#C9190B' },
+      { label: 'Unknown', value: unknown, color: '#F0AB00' },
+    ]
+  }, [filteredClusters])
 
   const podStatusData = useMemo(
     () =>
-      data.podSummary
+      data.podStatusSummary
         ? [
-            { label: 'Running', value: data.podSummary.running, color: '#3E8635' },
-            { label: 'Pending', value: data.podSummary.pending, color: '#F0AB00' },
-            { label: 'Failed', value: data.podSummary.failed, color: '#C9190B' },
-            { label: 'Error', value: data.podSummary.error, color: '#0066CC' },
-            { label: 'Unknown', value: data.podSummary.unknown, color: '#6a6e73' },
+            { label: 'Running', value: data.podStatusSummary.running, color: '#3E8635' },
+            { label: 'Pending', value: data.podStatusSummary.pending, color: '#F0AB00' },
+            { label: 'Failed', value: data.podStatusSummary.failed, color: '#C9190B' },
+            { label: 'Succeeded', value: data.podStatusSummary.succeeded, color: '#0066CC' },
+            { label: 'Unknown', value: data.podStatusSummary.unknown, color: '#6a6e73' },
           ]
         : [],
-    [data.podSummary]
+    [data.podStatusSummary]
   )
 
   const resourceCountsData = useMemo(
     () =>
-      Object.entries(data.resourceCounts).map(([kind, count]) => ({
-        label: kind,
-        value: count,
+      (data.resourceSummary || []).map((resource) => ({
+        label: resource.kind,
+        value: resource.count,
       })),
-    [data.resourceCounts]
+    [data.resourceSummary]
   )
 
   const nodesPerCluster = useMemo(() => {
     const counts: Record<string, number> = {}
-    data.nodes.forEach((node) => {
+    filteredNodes.forEach((node) => {
       counts[node.cluster] = (counts[node.cluster] || 0) + 1
     })
     return Object.entries(counts)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 8)
       .map(([cluster, count]) => ({ label: cluster, value: count }))
-  }, [data.nodes])
+  }, [filteredNodes])
 
   const clusterTableRows = useMemo(
-    () =>
-      data.clusters.map((cluster) => ({
+    () => {
+      // Start with already search-filtered clusters, then apply cluster dropdown filter
+      let clusters = filteredClusters
+      
+      // Filter clusters based on selected cluster filter
+      if (filters.clusters.length > 0) {
+        clusters = clusters.filter((cluster) => filters.clusters.includes(cluster.name))
+      }
+      
+      return clusters.map((cluster) => ({
         name: cluster.name,
         status: (cluster.ManagedClusterConditionAvailable as string) === 'True' ? '✅ Available' : '❌ Unavailable',
         nodes: cluster.nodes || '-',
         kubernetesVersion: cluster.kubernetesVersion || '-',
         cpu: cluster.cpu || '-',
         memory: cluster.memory || '-',
-      })),
-    [data.clusters]
+      }))
+    },
+    [filteredClusters, filters.clusters]
   )
 
   const nodeTableRows = useMemo(
-    () =>
-      data.nodes.slice(0, 20).map((node) => ({
+    () => {
+      // Use already-filtered nodes
+      return filteredNodes.slice(0, 20).map((node) => ({
         name: node.name,
         cluster: node.cluster,
         role: node.role || '-',
         status: node.status || '-',
-      })),
-    [data.nodes]
+      }))
+    },
+    [filteredNodes]
   )
 
   const deploymentTableRows = useMemo(
-    () =>
-      data.deployments.map((dep) => ({
+    () => {
+      let deployments = data.deployments || []
+      
+      // Filter by search text (with kind names removed)
+      if (cleanedSearchText) {
+        const searchLower = cleanedSearchText.toLowerCase()
+        deployments = deployments.filter((dep) => 
+          dep.name.toLowerCase().includes(searchLower) ||
+          (dep.namespace && dep.namespace.toLowerCase().includes(searchLower)) ||
+          dep.cluster.toLowerCase().includes(searchLower)
+        )
+      }
+      
+      return deployments.map((dep) => ({
         name: dep.name,
         namespace: dep.namespace || '-',
         cluster: dep.cluster,
         replicas: dep.desired || '-',
         available: dep.available || '-',
-      })),
-    [data.deployments]
+      }))
+    },
+    [data.deployments, cleanedSearchText]
+  )
+
+  const daemonSetTableRows = useMemo(
+    () => {
+      let daemonSets = data.daemonSets || []
+      
+      // Filter by search text (with kind names removed)
+      if (cleanedSearchText) {
+        const searchLower = cleanedSearchText.toLowerCase()
+        daemonSets = daemonSets.filter((ds) => 
+          ds.name.toLowerCase().includes(searchLower) ||
+          (ds.namespace && ds.namespace.toLowerCase().includes(searchLower)) ||
+          ds.cluster.toLowerCase().includes(searchLower)
+        )
+      }
+      
+      return daemonSets.map((ds) => ({
+        name: ds.name,
+        namespace: ds.namespace || '-',
+        cluster: ds.cluster,
+        desired: ds.desired || '-',
+        current: ds.current || '-',
+        ready: ds.ready || '-',
+        available: ds.available || '-',
+      }))
+    },
+    [data.daemonSets, cleanedSearchText]
+  )
+
+  const jobTableRows = useMemo(
+    () => {
+      let jobs = data.jobs || []
+      
+      // Filter by search text (with kind names removed)
+      if (cleanedSearchText) {
+        const searchLower = cleanedSearchText.toLowerCase()
+        jobs = jobs.filter((job) => 
+          job.name.toLowerCase().includes(searchLower) ||
+          (job.namespace && job.namespace.toLowerCase().includes(searchLower)) ||
+          job.cluster.toLowerCase().includes(searchLower)
+        )
+      }
+      
+      return jobs.map((job) => ({
+        name: job.name,
+        namespace: job.namespace || '-',
+        cluster: job.cluster,
+        completions: job.completions || '-',
+        successful: job.successful || '-',
+        status: job.status || '-',
+      }))
+    },
+    [data.jobs, cleanedSearchText]
+  )
+
+  const replicaSetTableRows = useMemo(
+    () => {
+      let replicaSets = data.replicaSets || []
+      
+      // Filter by search text (with kind names removed)
+      if (cleanedSearchText) {
+        const searchLower = cleanedSearchText.toLowerCase()
+        replicaSets = replicaSets.filter((rs) => 
+          rs.name.toLowerCase().includes(searchLower) ||
+          (rs.namespace && rs.namespace.toLowerCase().includes(searchLower)) ||
+          rs.cluster.toLowerCase().includes(searchLower)
+        )
+      }
+      
+      return replicaSets.map((rs) => ({
+        name: rs.name,
+        namespace: rs.namespace || '-',
+        cluster: rs.cluster,
+        desired: rs.desired || '-',
+        current: rs.current || '-',
+        ready: rs.ready || '-',
+      }))
+    },
+    [data.replicaSets, cleanedSearchText]
+  )
+
+  const statefulSetTableRows = useMemo(
+    () => {
+      let statefulSets = data.statefulSets || []
+      
+      // Filter by search text (with kind names removed)
+      if (cleanedSearchText) {
+        const searchLower = cleanedSearchText.toLowerCase()
+        statefulSets = statefulSets.filter((ss) => 
+          ss.name.toLowerCase().includes(searchLower) ||
+          (ss.namespace && ss.namespace.toLowerCase().includes(searchLower)) ||
+          ss.cluster.toLowerCase().includes(searchLower)
+        )
+      }
+      
+      return statefulSets.map((ss) => ({
+        name: ss.name,
+        namespace: ss.namespace || '-',
+        cluster: ss.cluster,
+        desired: ss.desired || '-',
+        current: ss.current || '-',
+        ready: ss.ready || '-',
+      }))
+    },
+    [data.statefulSets, cleanedSearchText]
   )
 
   return (
-    <Page>
-      <PageSection variant="light">
-        <Flex justifyContent={{ default: 'justifyContentSpaceBetween' }} alignItems={{ default: 'alignItemsCenter' }}>
-          <FlexItem>
-            <TextContent>
-              <Title headingLevel="h1" size="xl">
-                🎯 {dashboardResource.spec.display?.name || 'Perses Dashboard'}
-              </Title>
-              <Text>{dashboardResource.spec.display?.description}</Text>
-              <Text component="small" style={{ color: '#6a6e73' }}>
-                Powered by <strong>@perses-dev</strong> library • Dashboard: {dashboardResource.metadata.name} •
-                Duration: {dashboardResource.spec.duration} • Refresh: {dashboardResource.spec.refreshInterval}
+    <ChartsProvider chartsTheme={testChartsTheme}>
+      <Page>
+        <PageSection variant="light">
+          <Flex justifyContent={{ default: 'justifyContentSpaceBetween' }} alignItems={{ default: 'alignItemsCenter' }}>
+            <FlexItem>
+              <TextContent>
+                <Title headingLevel="h1" size="xl">
+                  🎯 {dashboardResource.spec.display?.name || 'Perses Dashboard'}
+                  {activeFilterCount > 0 && (
+                    <Badge style={{ marginLeft: '12px' }} isRead>
+                      {activeFilterCount} filter{activeFilterCount !== 1 ? 's' : ''} active
+                    </Badge>
+                  )}
+                </Title>
+                <Text>{dashboardResource.spec.display?.description}</Text>
+                <Text component="small" style={{ color: '#6a6e73' }}>
+                  Powered by <strong>@perses-dev/components</strong> (ECharts) • Dashboard: {dashboardResource.metadata.name} •
+                  Duration: {dashboardResource.spec.duration} • Refresh: {dashboardResource.spec.refreshInterval}
               </Text>
             </TextContent>
           </FlexItem>
@@ -498,14 +475,13 @@ export function PersesDashboardView() {
           <Alert
             variant="info"
             isInline
-            title="Perses Dashboard POC"
+            title="Perses Dashboard POC with Search API Filtering"
             actionClose={<AlertActionCloseButton onClose={() => setShowInfo(false)} />}
             style={{ margin: '0 16px' }}
           >
-            This POC uses the <strong>@perses-dev</strong> npm packages ({dashboardResource.metadata.project}). The
-            dashboard definition is created using Perses types (DashboardResource, PanelDefinition, LayoutDefinition).
-            Data is fetched from ACM Search API and rendered using custom panel components inspired by Perses
-            visualizations.
+            This POC uses the <strong>@perses-dev</strong> npm packages ({dashboardResource.metadata.project}). 
+            Data is fetched from <strong>ACM Search API</strong> with filtering support. Use the filters below to 
+            narrow down the dashboard data by cluster, namespace, resource kind, or search text.
           </Alert>
         </PageSection>
       )}
@@ -518,11 +494,19 @@ export function PersesDashboardView() {
         </PageSection>
       )}
 
+      {/* Dashboard Filters */}
+      <DashboardFilters
+        filters={filters}
+        options={filterOptions}
+        onFiltersChange={setFilters}
+        loading={loading}
+      />
+
       <PageSection variant="light" padding={{ default: 'noPadding' }}>
         <Toolbar>
           <ToolbarContent>
             <ToolbarItem>
-              <Button variant="secondary" icon={<SyncAltIcon />} onClick={fetchData} isLoading={loading}>
+              <Button variant="secondary" icon={<SyncAltIcon />} onClick={refetch} isLoading={loading}>
                 Refresh
               </Button>
             </ToolbarItem>
@@ -539,38 +523,38 @@ export function PersesDashboardView() {
       <Divider />
 
       <PageSection>
-        {/* Cluster Overview Section */}
+        {/* Cluster Overview Section - Using Perses StatChart */}
         <div style={{ marginBottom: '24px' }}>
           <Title headingLevel="h3" size="lg" style={{ marginBottom: '16px' }}>
             Cluster Overview
           </Title>
           <Grid hasGutter>
             <GridItem span={3}>
-              <StatPanel title="Total Clusters" value={data.clusterSummary?.total ?? '-'} loading={loading} />
+              <PersesStatChart title="Total Clusters" value={filteredClusters.length || '-'} loading={loading} />
             </GridItem>
             <GridItem span={3}>
-              <StatPanel
+              <PersesStatChart
                 title="Available Clusters"
-                value={data.clusterSummary?.available ?? '-'}
+                value={filteredClusters.filter((c) => c.ManagedClusterConditionAvailable === 'True').length || '-'}
                 color="#3E8635"
                 loading={loading}
               />
             </GridItem>
             <GridItem span={3}>
-              <StatPanel
+              <PersesStatChart
                 title="Unavailable Clusters"
-                value={data.clusterSummary?.unavailable ?? '-'}
+                value={filteredClusters.filter((c) => c.ManagedClusterConditionAvailable === 'False').length || '-'}
                 color="#C9190B"
                 loading={loading}
               />
             </GridItem>
             <GridItem span={3}>
-              <StatPanel title="Total Nodes" value={data.nodes.length || '-'} loading={loading} />
+              <PersesStatChart title="Total Nodes" value={filteredNodes.length || '-'} loading={loading} />
             </GridItem>
           </Grid>
         </div>
 
-        {/* Status Overview Section */}
+        {/* Status Overview Section - Using Perses Charts (ECharts) */}
         <div style={{ marginBottom: '24px' }}>
           <Title headingLevel="h3" size="lg" style={{ marginBottom: '16px' }}>
             Status Overview
@@ -578,23 +562,23 @@ export function PersesDashboardView() {
           <Grid hasGutter>
             <GridItem span={4}>
               <div style={{ height: '300px' }}>
-                <PieChartPanel title="Cluster Status" data={clusterStatusData} loading={loading} />
+                <PersesPieChart title="Cluster Status" data={clusterStatusData} loading={loading} height={300} />
               </div>
             </GridItem>
             <GridItem span={4}>
               <div style={{ height: '300px' }}>
-                <BarChartPanel title="Pod Status" data={podStatusData} loading={loading} />
+                <PersesBarChart title="Pod Status" data={podStatusData} loading={loading} height={300} />
               </div>
             </GridItem>
             <GridItem span={4}>
               <div style={{ height: '300px' }}>
-                <BarChartPanel title="Resources by Kind" data={resourceCountsData} loading={loading} />
+                <PersesBarChart title="Resources by Kind" data={resourceCountsData} loading={loading} height={300} />
               </div>
             </GridItem>
           </Grid>
         </div>
 
-        {/* Node Distribution Section */}
+        {/* Node Distribution Section - Using Perses Horizontal Bar Chart */}
         <div style={{ marginBottom: '24px' }}>
           <Title headingLevel="h3" size="lg" style={{ marginBottom: '16px' }}>
             Node Distribution
@@ -602,7 +586,7 @@ export function PersesDashboardView() {
           <Grid hasGutter>
             <GridItem span={6}>
               <div style={{ height: '350px' }}>
-                <BarChartPanel title="Nodes per Cluster" data={nodesPerCluster} loading={loading} />
+                <PersesHorizontalBarChart title="Nodes per Cluster" data={nodesPerCluster} loading={loading} height={350} />
               </div>
             </GridItem>
             <GridItem span={6}>
@@ -646,31 +630,123 @@ export function PersesDashboardView() {
           </div>
         </div>
 
-        {/* Workloads Section */}
-        <div style={{ marginBottom: '24px' }}>
-          <Title headingLevel="h3" size="lg" style={{ marginBottom: '16px' }}>
-            Workloads
-          </Title>
-          <div style={{ height: '400px' }}>
-            <TablePanel
-              title="Recent Deployments"
-              columns={[
-                { key: 'name', header: 'Deployment' },
-                { key: 'namespace', header: 'Namespace' },
-                { key: 'cluster', header: 'Cluster' },
-                { key: 'replicas', header: 'Replicas' },
-                { key: 'available', header: 'Available' },
-              ]}
-              rows={deploymentTableRows}
-              loading={loading}
-              maxRows={10}
-            />
+        {/* Workloads Section - Tables shown based on kind filter selection or search text */}
+        {effectiveKinds.length > 0 && (
+          <div style={{ marginBottom: '24px' }}>
+            <Title headingLevel="h3" size="lg" style={{ marginBottom: '16px' }}>
+              Workloads
+              {searchTextKinds.length > 0 && filters.kinds.length === 0 && (
+                <Text component="small" style={{ marginLeft: '12px', color: '#6a6e73', fontWeight: 'normal' }}>
+                  (filtered by search: {searchTextKinds.join(', ')})
+                </Text>
+              )}
+            </Title>
+            
+            {/* Deployments Table - shown when Deployment is selected or searched */}
+            {shouldShowKind('Deployment') && (
+              <div style={{ height: '350px', marginBottom: '24px' }}>
+                <TablePanel
+                  title="Deployments"
+                  columns={[
+                    { key: 'name', header: 'Name' },
+                    { key: 'namespace', header: 'Namespace' },
+                    { key: 'cluster', header: 'Cluster' },
+                    { key: 'replicas', header: 'Replicas' },
+                    { key: 'available', header: 'Available' },
+                  ]}
+                  rows={deploymentTableRows}
+                  loading={loading}
+                  maxRows={10}
+                />
+              </div>
+            )}
+
+            {/* DaemonSets Table - shown when DaemonSet is selected or searched */}
+            {shouldShowKind('DaemonSet') && (
+              <div style={{ height: '350px', marginBottom: '24px' }}>
+                <TablePanel
+                  title="DaemonSets"
+                  columns={[
+                    { key: 'name', header: 'Name' },
+                    { key: 'namespace', header: 'Namespace' },
+                    { key: 'cluster', header: 'Cluster' },
+                    { key: 'desired', header: 'Desired' },
+                    { key: 'current', header: 'Current' },
+                    { key: 'ready', header: 'Ready' },
+                    { key: 'available', header: 'Available' },
+                  ]}
+                  rows={daemonSetTableRows}
+                  loading={loading}
+                  maxRows={10}
+                />
+              </div>
+            )}
+
+            {/* StatefulSets Table - shown when StatefulSet is selected or searched */}
+            {shouldShowKind('StatefulSet') && (
+              <div style={{ height: '350px', marginBottom: '24px' }}>
+                <TablePanel
+                  title="StatefulSets"
+                  columns={[
+                    { key: 'name', header: 'Name' },
+                    { key: 'namespace', header: 'Namespace' },
+                    { key: 'cluster', header: 'Cluster' },
+                    { key: 'desired', header: 'Desired' },
+                    { key: 'current', header: 'Current' },
+                    { key: 'ready', header: 'Ready' },
+                  ]}
+                  rows={statefulSetTableRows}
+                  loading={loading}
+                  maxRows={10}
+                />
+              </div>
+            )}
+
+            {/* ReplicaSets Table - shown when ReplicaSet is selected or searched */}
+            {shouldShowKind('ReplicaSet') && (
+              <div style={{ height: '350px', marginBottom: '24px' }}>
+                <TablePanel
+                  title="ReplicaSets"
+                  columns={[
+                    { key: 'name', header: 'Name' },
+                    { key: 'namespace', header: 'Namespace' },
+                    { key: 'cluster', header: 'Cluster' },
+                    { key: 'desired', header: 'Desired' },
+                    { key: 'current', header: 'Current' },
+                    { key: 'ready', header: 'Ready' },
+                  ]}
+                  rows={replicaSetTableRows}
+                  loading={loading}
+                  maxRows={10}
+                />
+              </div>
+            )}
+
+            {/* Jobs Table - shown when Job is selected or searched */}
+            {shouldShowKind('Job') && (
+              <div style={{ height: '350px', marginBottom: '24px' }}>
+                <TablePanel
+                  title="Jobs"
+                  columns={[
+                    { key: 'name', header: 'Name' },
+                    { key: 'namespace', header: 'Namespace' },
+                    { key: 'cluster', header: 'Cluster' },
+                    { key: 'completions', header: 'Completions' },
+                    { key: 'successful', header: 'Successful' },
+                    { key: 'status', header: 'Status' },
+                  ]}
+                  rows={jobTableRows}
+                  loading={loading}
+                  maxRows={10}
+                />
+              </div>
+            )}
           </div>
-        </div>
-      </PageSection>
-    </Page>
+        )}
+        </PageSection>
+      </Page>
+    </ChartsProvider>
   )
 }
 
 export default PersesDashboardView
-
