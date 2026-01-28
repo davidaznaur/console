@@ -1,5 +1,3 @@
-/* Copyright Contributors to the Open Cluster Management project */
-
 // Dashboard Filters
 export { DashboardFilters } from './DashboardFilters'
 export type { DashboardFiltersProps } from './DashboardFilters'

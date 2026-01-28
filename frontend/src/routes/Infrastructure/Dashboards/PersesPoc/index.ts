@@ -25,11 +25,11 @@ export { default } from './PersesDashboard'
 // Re-export Perses integration
 export * from './perses'
 
-// Re-export original components for backwards compatibility
+// Re-export components
 export * from './components'
 
 // Re-export hooks
-export * from './useDashboardData'
+export * from './useFilteredDashboardData'
 
 // Re-export types
 export * from './types'

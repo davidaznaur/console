@@ -1,9 +1,6 @@
-/* Copyright Contributors to the Open Cluster Management project */
-
 /**
  * Perses Chart Components
- * These components use the actual @perses-dev/components library
- * with ECharts under the hood
+ * These components use the @perses-dev/components library (ECharts)
  */
 
 import { useMemo } from 'react'
@@ -16,7 +13,6 @@ export { ChartsProvider, testChartsTheme }
 
 /**
  * Perses Bar Chart Component
- * Uses ECharts via @perses-dev/components
  */
 export interface PersesBarChartProps {
   title: string
@@ -97,7 +93,6 @@ export function PersesBarChart({ title, data, loading, height = 250 }: PersesBar
 
 /**
  * Perses Pie Chart Component
- * Uses ECharts via @perses-dev/components
  */
 export interface PersesPieChartProps {
   title: string
@@ -185,7 +180,6 @@ export function PersesPieChart({ title, data, loading, height = 250 }: PersesPie
 
 /**
  * Perses Stat Chart Component
- * Simple stat display with optional sparkline
  */
 export interface PersesStatChartProps {
   title: string
@@ -280,7 +274,6 @@ export function PersesStatChart({ title, value, color, loading, trend }: PersesS
 
 /**
  * Perses Horizontal Bar Chart Component
- * For displaying data like "Nodes per Cluster"
  */
 export interface PersesHorizontalBarChartProps {
   title: string

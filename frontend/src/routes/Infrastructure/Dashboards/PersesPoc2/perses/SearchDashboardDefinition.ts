@@ -1,14 +1,7 @@
-/* Copyright Contributors to the Open Cluster Management project */
-
-/**
- * ACM Dashboard Definition for Perses
- * This file defines the dashboard structure using Perses types
- */
-
 import { DashboardResource, DashboardSpec, PanelDefinition, LayoutDefinition } from '@perses-dev/core'
 
 /**
- * Create a StatChart panel definition
+ * Factory helpers to build Perses-style panels.
  */
 export function createStatChartPanel(
   name: string,
@@ -48,14 +41,7 @@ export function createStatChartPanel(
   }
 }
 
-/**
- * Create a Table panel definition
- */
-export function createTablePanel(
-  name: string,
-  description: string,
-  columns?: string[]
-): PanelDefinition {
+export function createTablePanel(name: string, description: string, columns?: string[]): PanelDefinition {
   return {
     kind: 'Panel',
     spec: {
@@ -77,9 +63,6 @@ export function createTablePanel(
   }
 }
 
-/**
- * Create a BarChart panel definition
- */
 export function createBarChartPanel(
   name: string,
   description: string,
@@ -103,14 +86,7 @@ export function createBarChartPanel(
   }
 }
 
-/**
- * Create a PieChart panel definition
- */
-export function createPieChartPanel(
-  name: string,
-  description: string,
-  showLegend = true
-): PanelDefinition {
+export function createPieChartPanel(name: string, description: string, showLegend = true): PanelDefinition {
   return {
     kind: 'Panel',
     spec: {
@@ -132,9 +108,6 @@ export function createPieChartPanel(
   }
 }
 
-/**
- * Create a Grid layout definition
- */
 export function createGridLayout(
   title: string,
   items: { panelKey: string; x: number; y: number; width: number; height: number }[],
@@ -163,10 +136,9 @@ export function createGridLayout(
 }
 
 /**
- * Create the ACM Overview Dashboard
+ * Create the ACM Search Dashboard definition (metadata only; data is supplied by React).
  */
-export function createACMOverviewDashboard(): DashboardResource {
-  // Define panels
+export function createAcmSearchDashboard(): DashboardResource {
   const panels: Record<string, PanelDefinition> = {
     totalClusters: createStatChartPanel('Total Clusters', 'Total number of managed clusters'),
     availableClusters: createStatChartPanel('Available Clusters', 'Clusters with healthy status', undefined, [
@@ -188,12 +160,7 @@ export function createACMOverviewDashboard(): DashboardResource {
       'cpu',
       'memory',
     ]),
-    nodeTable: createTablePanel('Nodes Overview', 'Nodes across all clusters', [
-      'name',
-      'cluster',
-      'role',
-      'status',
-    ]),
+    nodeTable: createTablePanel('Nodes Overview', 'Nodes across all clusters', ['name', 'cluster', 'role', 'status']),
     deploymentTable: createTablePanel('Recent Deployments', 'Deployments across all clusters', [
       'name',
       'namespace',
@@ -203,7 +170,6 @@ export function createACMOverviewDashboard(): DashboardResource {
     ]),
   }
 
-  // Define layouts
   const layouts: LayoutDefinition[] = [
     createGridLayout('Cluster Overview', [
       { panelKey: 'totalClusters', x: 0, y: 0, width: 6, height: 4 },
@@ -220,19 +186,14 @@ export function createACMOverviewDashboard(): DashboardResource {
       { panelKey: 'nodesPerCluster', x: 0, y: 0, width: 12, height: 8 },
       { panelKey: 'nodeTable', x: 12, y: 0, width: 12, height: 8 },
     ]),
-    createGridLayout('Cluster Details', [
-      { panelKey: 'clusterTable', x: 0, y: 0, width: 24, height: 10 },
-    ]),
-    createGridLayout('Workloads', [
-      { panelKey: 'deploymentTable', x: 0, y: 0, width: 24, height: 10 },
-    ]),
+    createGridLayout('Cluster Details', [{ panelKey: 'clusterTable', x: 0, y: 0, width: 24, height: 10 }]),
+    createGridLayout('Workloads', [{ panelKey: 'deploymentTable', x: 0, y: 0, width: 24, height: 10 }]),
   ]
 
-  // Create dashboard spec
   const spec: DashboardSpec = {
     display: {
-      name: 'ACM Multi-Cluster Overview',
-      description: 'Dashboard powered by Perses library using ACM Search API',
+      name: 'ACM Search Overview',
+      description: 'Dashboard powered by Perses plugins with ACM Search API as datasource',
     },
     duration: '1h',
     refreshInterval: '30s',
@@ -250,11 +211,10 @@ export function createACMOverviewDashboard(): DashboardResource {
     },
   }
 
-  // Return the complete dashboard resource
   return {
     kind: 'Dashboard',
     metadata: {
-      name: 'acm-overview',
+      name: 'acm-search-overview',
       project: 'acm',
       version: 1,
     },

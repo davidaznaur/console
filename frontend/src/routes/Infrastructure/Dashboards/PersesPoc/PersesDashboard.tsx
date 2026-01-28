@@ -14,9 +14,6 @@
  * - @perses-dev/pie-chart-plugin - Pie chart panels
  */
 
-import React from 'react'
-import { Navigate, Route, Routes } from 'react-router-dom-v5-compat'
-import { NavigationPath, createRoutePathFunction } from '../../../../NavigationPath';
 // Import the Perses-based dashboard view
 import { PersesDashboardView } from './perses'
 

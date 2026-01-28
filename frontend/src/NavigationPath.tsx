@@ -128,6 +128,7 @@ export enum NavigationPath {
 
   // Infrastructure - Dashboards
   persesDashboard = '/multicloud/infrastructure/dashboards/perses',
+  persesDashboard2 = '/multicloud/infrastructure/dashboards/perses2',
 
   // Infrastructure - Automations
   ansibleAutomations = '/multicloud/infrastructure/automations',

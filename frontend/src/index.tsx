@@ -7,6 +7,7 @@ import { Fragment, StrictMode, Suspense } from 'react'
 import { createRoot } from 'react-dom/client'
 import 'regenerator-runtime/runtime'
 import App from './App'
+import AppProviders from './AppProviders'
 import '@patternfly/patternfly/patternfly-charts-theme-dark.css'
 
 const container = document.getElementById('root')
@@ -15,7 +16,9 @@ const root = createRoot(container!)
 root.render(
   <StrictMode>
     <Suspense fallback={<Fragment />}>
-      <App />
+      <AppProviders>
+        <App />
+      </AppProviders>
     </Suspense>
   </StrictMode>
 )

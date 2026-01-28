@@ -40,6 +40,16 @@ import { createRoutePathFunction, MatchType, NavigationPath } from './Navigation
 import { isRequestAbortedError } from './resources/utils'
 import { setLightTheme, ThemeSwitcher } from './theme'
 import { AcmTablePaginationContextProvider, AcmToastGroup, AcmToastProvider } from './ui-components'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+
+ const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        refetchOnWindowFocus: false,
+        retry: 0,
+      },
+    },
+  });
 
 // HOME
 const WelcomePage = lazy(() => import('./routes/Home/Welcome/Welcome'))
@@ -51,6 +61,7 @@ const Clusters = lazy(() => import('./routes/Infrastructure/Clusters/Clusters'))
 const Automations = lazy(() => import('./routes/Infrastructure/Automations/Automations'))
 const InfraEnvironments = lazy(() => import('./routes/Infrastructure/InfraEnvironments/InfraEnvironments'))
 const PersesDashboard = lazy(() => import('./routes/Infrastructure/Dashboards/PersesPoc/PersesDashboard'))
+const PersesDashboard2 = lazy(() => import('./routes/Infrastructure/Dashboards/PersesPoc2/PersesDashboard'))
 
 // GOVERNANCE
 const Governance = lazy(() => import('./routes/Governance/Governance'))
@@ -207,6 +218,13 @@ const routes: (IRoute | IRouteGroup)[] = [
         path: NavigationPath.persesDashboard,
         match: MatchType.SubRoutes,
         element: <PersesDashboard />,
+      },
+      {
+        title: 'Perses Dashboard (ACM Search)',
+        type: 'route',
+        path: NavigationPath.persesDashboard2,
+        match: MatchType.SubRoutes,
+        element: <QueryClientProvider client={queryClient}><PersesDashboard2 /></QueryClientProvider>,
       },
     ],
   },

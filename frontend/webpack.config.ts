@@ -41,6 +41,9 @@ module.exports = function (env: any, argv: { hot?: boolean; mode: string | undef
       },
       alias: {
         handlebars: 'handlebars/dist/handlebars.js',
+        // Force all @tanstack/react-query imports to use the same instance
+        // This fixes "No QueryClient set" errors when using Perses components
+        '@tanstack/react-query': path.resolve(__dirname, 'node_modules/@tanstack/react-query'),
         ...(dummyAI && {
           '@openshift-assisted/ui-lib/cim$': path.resolve(__dirname, '__mocks__/@openshift-assisted/dummy.ts'),
         }),
