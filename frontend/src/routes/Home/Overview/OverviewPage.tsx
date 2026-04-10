@@ -61,10 +61,19 @@ import {
   parseOperatorMetric,
   parseUpgradeRiskPredictions,
 } from './overviewDataFunctions'
+import { getWizardRegions } from '../../../lib/get-test-david'
+import { getServiceAccount } from '../../../resources/get-service-account'
+import { WizSelect } from '@patternfly-labs/react-form-wizard'
+import { useFetchRegions } from './useFetchRegions'
 
 interface WidgetLayout {
   visible: boolean
   position: number
+}
+
+interface OcmSecretData {
+  client_id: string;
+  client_secret: string;
 }
 
 export default function OverviewPage(props: Readonly<{ selectedClusterLabels: Record<string, string[]> }>) {
@@ -171,6 +180,16 @@ export default function OverviewPage(props: Readonly<{ selectedClusterLabels: Re
     })
     return ids
   }, [allClusters])
+
+  const [regions, setRegions] = useState();
+
+  const ocmSecret = getServiceAccount();
+  console.log("OCMSECRET", ocmSecret)
+  const {data} = ocmSecret[0];
+  const {client_id, client_secret} = data as unknown as OcmSecretData;
+
+  const {data: regionsData, isLoading} = useFetchRegions(client_id, client_secret);
+  
 
   useEffect(() => {
     if (isInsightsSectionOpen && managedClusterIds.length > 0) {
@@ -362,6 +381,7 @@ export default function OverviewPage(props: Readonly<{ selectedClusterLabels: Re
   return (
     <>
       <PageSection hasBodyWrapper={false}>
+        <WizSelect path="test.regions" label="Regions" options={regionsData}/>
         {hasVirtualMachines && (
           <div style={{ marginBottom: '1rem' }}>
             <KubevirtProviderAlert variant="search" component="hint" />

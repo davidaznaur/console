@@ -33,6 +33,7 @@ import { virtualMachineGETProxy, virtualMachineProxy, vmResourceUsageProxy } fro
 import { managedClusterProxy } from './routes/managedClusterProxy'
 import { hypershiftStatus } from './routes/hypershift-status'
 import { clusterVersion } from './routes/clusterVersion'
+import { getTestDataOCM } from './routes/wizard-regions'
 
 const isProduction = process.env.NODE_ENV === 'production'
 const isDevelopment = process.env.NODE_ENV === 'development'
@@ -73,6 +74,7 @@ router.get('/hub', hub)
 router.get('/hypershift-status', hypershiftStatus)
 router.get('/cluster-version', clusterVersion)
 router.post('/upgrade-risks-prediction', upgradeRiskPredictions)
+router.post('/testdavid', getTestDataOCM)
 router.post('/aggregate/*', aggregate)
 router.get('/virtualmachines/get/*', virtualMachineGETProxy)
 router.all('/virtualmachines/*', virtualMachineProxy)
