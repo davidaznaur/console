@@ -7,23 +7,41 @@ import {
   ICatalogCard,
   ItemView,
 } from '@stolostron/react-data-view'
-import { useCallback, useMemo, useState } from 'react'
+import { useRecoilValue, useSharedAtoms, useSetRecoilState } from '../../../../../shared-recoil';
+import { selectedServiceAccountState } from './rosaHCPAtom'
+import { useNavigate } from 'react-router-dom-v5-compat'
+import React, { useCallback, useMemo, useState } from 'react'
 import { useTranslation } from '../../../../../lib/acm-i18next'
 import { useDataViewStrings } from '../../../../../lib/dataViewStrings'
 import { DOC_LINKS } from '../../../../../lib/doc-util'
+import {WizSelect} from '@patternfly-labs/react-form-wizard'
 import { NavigationPath, useBackCancelNavigation } from '../../../../../NavigationPath'
 import { AcmPage, AcmPageHeader, Provider } from '../../../../../ui-components'
 import { getTypedCreateClusterPath } from '../ClusterInfrastructureType'
 import { useIsHypershiftEnabled } from '../../../../../hooks/use-hypershift-enabled'
 import { HypershiftDiagramExpand } from './common/HypershiftDiagramExpand'
-import { Icon } from '@patternfly/react-core'
+import { Button, Icon,Stack, StackItem, Modal, ModalBody, ModalFooter, ModalHeader } from '@patternfly/react-core'
+import { Secret } from '../../../../../resources';
 
 export function CreateAWSControlPlane() {
   const [t] = useTranslation()
+  const navigate = useNavigate()
   const { nextStep, back, cancel } = useBackCancelNavigation()
   const [isDiagramExpanded, setIsDiagramExpanded] = useState(true)
   const [isMouseOverControlPlaneLink, setIsMouseOverControlPlaneLink] = useState(false)
   const [isHypershiftEnabled, loaded] = useIsHypershiftEnabled()
+
+  const { secretsState } = useSharedAtoms()
+        const secrets = useRecoilValue(secretsState)
+        const credentialsSecrets = useMemo(
+          () =>
+            secrets.filter(
+              (secret) => secret?.metadata?.labels?.['cluster.open-cluster-management.io/credentials'] !== undefined && secret.metadata.labels?.['cluster.open-cluster-management.io/type'] === 'rhocm'
+            ),
+          [secrets]
+        )
+
+  const [selectedSecret, setSelectedSecret] = React.useState<any>();
 
   const onDiagramToggle = (isExpanded: boolean) => {
     if (!isMouseOverControlPlaneLink) {
@@ -58,7 +76,7 @@ export function CreateAWSControlPlane() {
             ],
           },
         ],
-        onClick: isHypershiftEnabled ? nextStep(NavigationPath.createAWSCLI) : undefined,
+        onClick: !isHypershiftEnabled ? () => setIsModalOpen(true) : undefined,
         alertTitle: (() => {
           if (!loaded || isHypershiftEnabled) return undefined
           return t('Hosted control plane operator must be enabled in order to continue')
@@ -127,6 +145,18 @@ export function CreateAWSControlPlane() {
 
   const dataViewStrings = useDataViewStrings()
 
+  const [isModalOpen, setIsModalOpen] = React.useState<boolean>(false);
+   //nextStep(NavigationPath.createROSAHCP)
+
+  const close = () => {
+    setIsModalOpen(false)
+  }
+
+  const setSelectedServiceAccount = useSetRecoilState(selectedServiceAccountState)
+
+
+        console.log("************credentialsSecrets**************", credentialsSecrets)
+
   return (
     <AcmPage
       header={
@@ -154,6 +184,40 @@ export function CreateAWSControlPlane() {
           }
         />
       </DataViewStringContext.Provider>
+
+      <Modal isOpen={isModalOpen} style={{width: '50%'}}>
+        <ModalHeader>Select service account</ModalHeader>
+        <ModalBody>
+   
+   <Stack hasGutter>
+    <StackItem>TEST</StackItem>
+    <StackItem>
+<WizSelect label="Select service account" path="cluster.service_account"
+
+                      options={credentialsSecrets.map((secret) => {
+                        console.log("SECRET", secret)
+                        return ({
+                          label: secret.metadata.name ?? '',
+                          value: secret.metadata.name
+                      })})}
+                      isCreatable
+                      onValueChange={(item) => {
+                        console.log("ITEM", item)
+                          const filteredServiceAccount = credentialsSecrets.filter((secret) => secret.metadata.name === item)
+                          setSelectedSecret(filteredServiceAccount)
+                          setSelectedServiceAccount(filteredServiceAccount[0] as unknown as Secret)
+                      }}
+                      />
+    </StackItem>
+    <StackItem>TEST</StackItem>
+   </Stack>
+          
+        </ModalBody>
+        <ModalFooter>
+          <Button onClick={nextStep(NavigationPath.createROSAHCP)}>Next</Button>
+          <Button onClick={close}>Cancel</Button>
+        </ModalFooter>
+      </Modal>
     </AcmPage>
   )
 }

@@ -19,12 +19,8 @@ export async function getTestDataOCM(req: Http2ServerRequest, res: Http2ServerRe
 
             const accessTokenSSO = await getOcmServiceToken(body.service_account_id, body.service_account_secret)
 
-            const accountPath = 'https://api.openshift.com/api/accounts_mgmt/v1/organizations/1wuANBLgbvRSXRXN10OuSFE2gzB/labels'
 
             const regionsPath = 'https://api.openshift.com/api/accounts_mgmt/v1/regions';
-            const currentAccountPath = "https://api.openshift.com/api/accounts_mgmt/v1/current_account"
-            const requestAccount = await jsonRequest(currentAccountPath, accessTokenSSO);
-            console.log("ACCOUNT FETCHED", requestAccount)
             const request = await jsonRequest(regionsPath, accessTokenSSO).catch(
                 (err: Error) => {
                     logger.error({ msg: 'Failed to fetch regions', error: err.message })
@@ -35,9 +31,41 @@ export async function getTestDataOCM(req: Http2ServerRequest, res: Http2ServerRe
             res.setHeader('Content-Type', 'application/json')
             res.end(JSON.stringify(request))
 
+        })
+    } catch (err) {
+        logger.error(err)
+        respondInternalServerError(req, res)
+    }
+}
+
+export async function getAwsAccountIds(req: Http2ServerRequest, res: Http2ServerResponse): Promise<void> {
+    try {
+        let data: string = undefined
+        const chucks: string[] = []
+        req.on('data', (chuck: any) => {
+            chucks.push(chuck)
+        })
+
+        req.on('end', async () => {
+            data = chucks.join()
+            const body = JSON.parse(data) as any
+
+            const accessTokenSSO = await getOcmServiceToken(body.service_account_id, body.service_account_secret)
+
+            const accountPath = 'https://api.openshift.com/api/accounts_mgmt/v1/organizations/1wuANBLgbvRSXRXN10OuSFE2gzB/labels'
+
+            const currentAccountPath = "https://api.openshift.com/api/accounts_mgmt/v1/current_account"
+            //const requestAccount = await jsonRequest(currentAccountPath, accessTokenSSO);
+            //console.log("ACCOUNT FETCHED", requestAccount)
+
             const accReq = await jsonRequest(accountPath, accessTokenSSO).catch((err: Error) => {
                 logger.error({ msg: "Error gettting account info", error: err.message })
             })
+
+            console.log("AWS IDS", accReq)
+
+            res.setHeader('Content-Type', 'application/json')
+            res.end(JSON.stringify(accReq))
 
         })
     } catch (err) {

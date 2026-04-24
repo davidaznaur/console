@@ -1,20 +1,21 @@
 import { useQuery } from "@tanstack/react-query";
-import { getWizardRegions } from "../../../lib/get-test-david";
+import { getWizardRegions } from "../../../lib/wizard-test";
 
 
-export const useFetchRegions = (client_id: string, client_secret: string) => {
+export const useFetchRegions = (selectedSecret: any) => {
+  console.log("SELECTEDSECRET", selectedSecret)
  const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: [
       'wizard',
       'regions'
     ],
     queryFn: async () => {
-      const response = await getWizardRegions(client_id, client_secret);
+      const response = await getWizardRegions(selectedSecret.data.client_id, selectedSecret.data.client_secret);
       const filterRegions = response.items.map((region: any) => region.id);
 
       return filterRegions;
     },
-    enabled: true,
+    enabled: !!selectedSecret,
   });
 
   return {
