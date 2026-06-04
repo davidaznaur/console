@@ -5,41 +5,37 @@ import { logger } from '../../lib/logger'
 import { respondInternalServerError } from '../../lib/respond'
 import { getOcmServiceToken } from '../../lib/ocmServiceToken'
 
+export function getWizardRegions(req: Http2ServerRequest, res: Http2ServerResponse): Promise<void> {
+  try {
+    let data: string = undefined
+    const chucks: string[] = []
+    req.on('data', (chuck: any) => {
+      chucks.push(chuck)
+    })
 
-export async function getWizardRegions(req: Http2ServerRequest, res: Http2ServerResponse): Promise<void> {
-    try {
-        let data: string = undefined
-        const chucks: string[] = []
-        req.on('data', (chuck: any) => {
-            chucks.push(chuck)
-        })
+    req.on('end', async () => {
+      data = chucks.join()
+      const body = JSON.parse(data)
+      console.log('****************** DAVID BODY **************', body)
+      const accessTokenSSO = await getOcmServiceToken(body.service_account_id, body.service_account_secret)
 
-        req.on('end', async () => {
-            data = chucks.join()
-            const body = JSON.parse(data) as any
+      // const accountPath = 'https://api.openshift.com/api/accounts_mgmt/v1/organizations/1wuANBLgbvRSXRXN10OuSFE2gzB/labels'
 
-            const accessTokenSSO = await getOcmServiceToken(body.service_account_id, body.service_account_secret)
+      const regionsPath = 'https://api.stage.openshift.com/api/accounts_mgmt/v1/regions'
+      const request = await jsonRequest(regionsPath, accessTokenSSO).catch((err: Error) => {
+        logger.error({ msg: 'Failed to fetch regions', error: err.message })
+        return { error: err.message }
+      })
 
-            // const accountPath = 'https://api.openshift.com/api/accounts_mgmt/v1/organizations/1wuANBLgbvRSXRXN10OuSFE2gzB/labels'
+      res.setHeader('Content-Type', 'application/json')
+      res.end(JSON.stringify(request))
 
-            const regionsPath = 'https://api.openshift.com/api/accounts_mgmt/v1/regions';
-            const request = await jsonRequest(regionsPath, accessTokenSSO).catch(
-                (err: Error) => {
-                    logger.error({ msg: 'Failed to fetch regions', error: err.message })
-                    return { error: err.message }
-                }
-            )
-
-            res.setHeader('Content-Type', 'application/json')
-            res.end(JSON.stringify(request))
-
-            // const accReq = await jsonRequest(accountPath, accessTokenSSO).catch((err: Error) => {
-            //     logger.error({ msg: "Error gettting account info", error: err.message })
-            // })
-
-        })
-    } catch (err) {
-        logger.error(err)
-        respondInternalServerError(req, res)
-    }
+      // const accReq = await jsonRequest(accountPath, accessTokenSSO).catch((err: Error) => {
+      //     logger.error({ msg: "Error gettting account info", error: err.message })
+      // })
+    })
+  } catch (err) {
+    logger.error(err)
+    respondInternalServerError(req, res)
+  }
 }

@@ -13,6 +13,7 @@ export enum HostInventoryInfrastructureType {
 
 const clusterInfrastructureTypes = [
   Provider.aws,
+  Provider.hcp,
   Provider.awss3,
   Provider.azure,
   Provider.gcp,

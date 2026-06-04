@@ -9,6 +9,7 @@ export enum Provider {
   redhatcloud = 'rhocm',
   ansible = 'ans',
   openstack = 'ost',
+  hcp = 'hcp',
   aws = 'aws',
   awss3 = 'awss3',
   gcp = 'gcp',

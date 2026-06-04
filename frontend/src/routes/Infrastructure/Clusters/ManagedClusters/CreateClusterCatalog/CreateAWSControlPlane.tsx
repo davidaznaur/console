@@ -76,7 +76,7 @@ export function CreateAWSControlPlane() {
             ],
           },
         ],
-        onClick: !isHypershiftEnabled ? () => setIsModalOpen(true) : undefined,
+        onClick: nextStep(NavigationPath.prerequisites),
         alertTitle: (() => {
           if (!loaded || isHypershiftEnabled) return undefined
           return t('Hosted control plane operator must be enabled in order to continue')

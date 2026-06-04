@@ -41,6 +41,9 @@ module.exports = function (env: any, argv: { hot?: boolean; mode: string | undef
       },
       alias: {
         handlebars: 'handlebars/dist/handlebars.js',
+        'react': path.resolve(__dirname, 'node_modules/react'),
+        'react-dom': path.resolve(__dirname, 'node_modules/react-dom'),
+        'monaco-editor': path.resolve(__dirname, 'node_modules/monaco-editor'),
         ...(dummyAI && {
           '@openshift-assisted/ui-lib/cim$': path.resolve(__dirname, '__mocks__/@openshift-assisted/dummy.ts'),
         }),

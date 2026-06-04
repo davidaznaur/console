@@ -9,7 +9,7 @@ import DiscoveryConfigPage from './DiscoveredClusters/DiscoveryConfig/DiscoveryC
 import ClusterDetailsPage from './ManagedClusters/ClusterDetails/ClusterDetails'
 import EditAICluster from './ManagedClusters/components/cim/EditAICluster'
 import { HypershiftAWSCLI } from './ManagedClusters/CreateCluster/components/assisted-installer/hypershift/HypershiftAWSCLI'
-import {RosaHCPWizardWrapper} from './ManagedClusters/CreateCluster/components/assisted-installer/hypershift/RosaHCPWizardWrapper'
+import {RosaHCPWizardWrapper} from './ManagedClusters/CreateCluster/RosaHcpWizard/RosaHCPWizardWrapper'
 import { CreateAWSControlPlane } from './ManagedClusters/CreateClusterCatalog/CreateAWSControlPlane'
 import { CreateControlPlane } from './ManagedClusters/CreateClusterCatalog/CreateControlPlane'
 import { CreateDiscoverHost } from './ManagedClusters/CreateClusterCatalog/CreateDiscoverHost'
@@ -34,6 +34,7 @@ import { MachinePoolsPageContent } from './ManagedClusters/ClusterDetails/Cluste
 import { ClustersSettingsPageContent } from './ManagedClusters/ClusterDetails/ClusterSettings/ClusterSettings'
 import RoleAssignmentsPage from './RoleAssignmentsPage'
 import ClusterSetRoleAssignmentsPage from './ClusterSets/ClusterSetRoleAssignmentsPage'
+import {PrerequisitesPage} from './ManagedClusters/CreateCluster/RosaHcpWizard/Prerequisites/PrerequisitesPage'
 
 const clustersChildPath = createRoutePathFunction(NavigationPath.clusters)
 
@@ -48,6 +49,7 @@ export default function Clusters() {
       />
       <Route path={clustersChildPath(NavigationPath.createAWSCLI)} element={<HypershiftAWSCLI />} />
       <Route path={clustersChildPath(NavigationPath.createROSAHCP)} element={<RosaHCPWizardWrapper />} />
+      <Route path={clustersChildPath(NavigationPath.prerequisites)} element={<PrerequisitesPage />} />
       <Route path={clustersChildPath(NavigationPath.createDiscoverHost)} element={<CreateDiscoverHost />} />
       <Route path={clustersChildPath(NavigationPath.createCluster)} element={<CreateClusterPage />} />
       <Route path={clustersChildPath(NavigationPath.importCluster)} element={<ImportClusterPage />} />

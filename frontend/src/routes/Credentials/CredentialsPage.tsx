@@ -44,6 +44,10 @@ export default function CredentialsPage() {
     [secrets]
   )
 
+  const rhocmSecret = credentialsSecrets.filter((cred: any) => cred.metadata.labels?.["cluster.open-cluster-management.io/type"] === 'rhocm')
+  console.log("******** credentialsSecrets ********", credentialsSecrets)
+  console.log("******** rhocmSecret ********", rhocmSecret)
+
   const providerConnections = secrets.map(unpackProviderConnection)
   const discoveryConfigs = useRecoilValue(discoveryConfigState)
 
