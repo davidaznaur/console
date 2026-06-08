@@ -1,5 +1,5 @@
 /* Copyright Contributors to the Open Cluster Management project */
-import { CheckIcon, ExternalLinkAltIcon } from '@patternfly/react-icons'
+import { CheckIcon, ExternalLinkAltIcon, HelpIcon, OutlinedQuestionCircleIcon, PlusCircleIcon } from '@patternfly/react-icons'
 import {
   CatalogCardItemType,
   CatalogColor,
@@ -7,21 +7,22 @@ import {
   ICatalogCard,
   ItemView,
 } from '@stolostron/react-data-view'
-import { useRecoilValue, useSharedAtoms, useSetRecoilState } from '../../../../../shared-recoil';
-import { selectedServiceAccountState } from './rosaHCPAtom'
-import { useNavigate } from 'react-router-dom-v5-compat'
+import { useRecoilValue, useSharedAtoms } from '../../../../../shared-recoil';
+import { useLocation, useNavigate } from 'react-router-dom-v5-compat'
 import React, { useCallback, useMemo, useState } from 'react'
 import { useTranslation } from '../../../../../lib/acm-i18next'
 import { useDataViewStrings } from '../../../../../lib/dataViewStrings'
 import { DOC_LINKS } from '../../../../../lib/doc-util'
-import {WizSelect} from '@patternfly-labs/react-form-wizard'
 import { NavigationPath, useBackCancelNavigation } from '../../../../../NavigationPath'
 import { AcmPage, AcmPageHeader, Provider } from '../../../../../ui-components'
 import { getTypedCreateClusterPath } from '../ClusterInfrastructureType'
 import { useIsHypershiftEnabled } from '../../../../../hooks/use-hypershift-enabled'
 import { HypershiftDiagramExpand } from './common/HypershiftDiagramExpand'
-import { Button, Icon,Stack, StackItem, Modal, ModalBody, ModalFooter, ModalHeader } from '@patternfly/react-core'
-import { Secret } from '../../../../../resources';
+import { Button, Icon, Stack, Modal, ModalBody, ModalFooter, ModalHeader, SelectOption, StackItem, Title, Content, ContentVariants, EmptyState, EmptyStateBody, EmptyStateFooter, FlexItem, Flex, Popover, FormGroup, FormHelperText, HelperText, HelperTextItem } from '@patternfly/react-core'
+import CreateROSAHCPButton from '../CreateCluster/RosaHcpWizard/CreateROSAHcpButton/CreateROSAHCPButton';
+import useNoAvailableHostsAlert from '../../../../../hooks/use-available-hosts-alert';
+import { AcmSelectBase } from '../../../../../components/AcmSelectBase';
+import { getTypedCreateCredentialsPath } from '../../../../Credentials/CreateCredentialsCatalog';
 
 export function CreateAWSControlPlane() {
   const [t] = useTranslation()
@@ -30,24 +31,39 @@ export function CreateAWSControlPlane() {
   const [isDiagramExpanded, setIsDiagramExpanded] = useState(true)
   const [isMouseOverControlPlaneLink, setIsMouseOverControlPlaneLink] = useState(false)
   const [isHypershiftEnabled, loaded] = useIsHypershiftEnabled()
+  //const noAvailableHostsAlert = useNoAvailableHostsAlert('hosted')
 
   const { secretsState } = useSharedAtoms()
-        const secrets = useRecoilValue(secretsState)
-        const credentialsSecrets = useMemo(
-          () =>
-            secrets.filter(
-              (secret) => secret?.metadata?.labels?.['cluster.open-cluster-management.io/credentials'] !== undefined && secret.metadata.labels?.['cluster.open-cluster-management.io/type'] === 'rhocm'
-            ),
-          [secrets]
-        )
+  const secrets = useRecoilValue(secretsState)
+  const credentialsSecrets = useMemo(
+    () =>
+      secrets.filter(
+        (secret) => secret?.metadata?.labels?.['cluster.open-cluster-management.io/credentials'] !== undefined && secret.metadata.labels?.['cluster.open-cluster-management.io/type'] === 'rhocm'
+      ),
+    [secrets]
+  )
 
-  const [selectedSecret, setSelectedSecret] = React.useState<any>();
+  const [selectedSecret, setSelectedSecret] = React.useState<any>(undefined);
 
   const onDiagramToggle = (isExpanded: boolean) => {
     if (!isMouseOverControlPlaneLink) {
       setIsDiagramExpanded(isExpanded)
     }
   }
+
+  const [isModalOpen, setIsModalOpen] = React.useState<boolean>(false);
+  //nextStep(NavigationPath.createROSAHCP)
+
+  const close = () => {
+    setSelectedSecret(undefined)
+    setIsModalOpen(false)
+
+  }
+
+  const withCliClick = nextStep((NavigationPath.createAWSCLI))
+
+
+
   const cards = useMemo(() => {
     const newCards: ICatalogCard[] = [
       {
@@ -75,8 +91,14 @@ export function CreateAWSControlPlane() {
               { text: t('Quickly provisions clusters.') },
             ],
           },
+          {
+            type: CatalogCardItemType.Description,
+            description: (
+              <CreateROSAHCPButton onCliClick={withCliClick} onInterfaceClick={setIsModalOpen} />
+            ) as unknown as string,
+          },
         ],
-        onClick: nextStep(NavigationPath.prerequisites),
+        onClick: () => { },
         alertTitle: (() => {
           if (!loaded || isHypershiftEnabled) return undefined
           return t('Hosted control plane operator must be enabled in order to continue')
@@ -90,12 +112,6 @@ export function CreateAWSControlPlane() {
             </a>
           )
         })(),
-        badgeList: [
-          {
-            badge: t('CLI-based'),
-            badgeColor: CatalogColor.purple,
-          },
-        ],
       },
       {
         id: 'standalone',
@@ -145,17 +161,27 @@ export function CreateAWSControlPlane() {
 
   const dataViewStrings = useDataViewStrings()
 
-  const [isModalOpen, setIsModalOpen] = React.useState<boolean>(false);
-   //nextStep(NavigationPath.createROSAHCP)
-
-  const close = () => {
-    setIsModalOpen(false)
-  }
-
-  const setSelectedServiceAccount = useSetRecoilState(selectedServiceAccountState)
 
 
-        console.log("************credentialsSecrets**************", credentialsSecrets)
+  //const setSelectedServiceAccount = useSetRecoilState(selectedServiceAccountState)
+
+  const { state } = useLocation()
+  const handleNext = useCallback(() => {
+    if (!selectedSecret?.length) return
+
+    console.log("SELECTED SECRET", selectedSecret)
+    navigate(NavigationPath.createROSAHCP, {
+      state: {
+        ...state,
+        selectedSecretName: selectedSecret[0]?.metadata?.name,
+        maxBackSteps: state?.maxBackSteps ? state.maxBackSteps + 1 : 1,
+        cancelSteps: state?.cancelSteps ? state.cancelSteps + 1 : 0,
+      },
+    })
+  }, [selectedSecret, navigate])
+
+
+  console.log("************credentialsSecrets**************", credentialsSecrets)
 
   return (
     <AcmPage
@@ -185,37 +211,112 @@ export function CreateAWSControlPlane() {
         />
       </DataViewStringContext.Provider>
 
-      <Modal isOpen={isModalOpen} style={{width: '50%'}}>
-        <ModalHeader>Select service account</ModalHeader>
+      <Modal isOpen={isModalOpen} onClose={close} variant='small'>
+        <ModalHeader>
+          <Title headingLevel='h3'>{t('Select service account')}
+          </Title>
+          <Content component={ContentVariants.p}>{t('To create a ROSA cluster, select a service account credential. This establishes the connection between Advanced Cluster Manager (ACM) and OpenShift Cluster Manager (OCM).')}</Content>
+        </ModalHeader>
         <ModalBody>
-   
-   <Stack hasGutter>
-    <StackItem>TEST</StackItem>
-    <StackItem>
-<WizSelect label="Select service account" path="cluster.service_account"
 
-                      options={credentialsSecrets.map((secret) => {
-                        console.log("SECRET", secret)
-                        return ({
-                          label: secret.metadata.name ?? '',
-                          value: secret.metadata.name
-                      })})}
-                      isCreatable
-                      onValueChange={(item) => {
-                        console.log("ITEM", item)
-                          const filteredServiceAccount = credentialsSecrets.filter((secret) => secret.metadata.name === item)
-                          setSelectedSecret(filteredServiceAccount)
-                          setSelectedServiceAccount(filteredServiceAccount[0] as unknown as Secret)
-                      }}
-                      />
-    </StackItem>
-    <StackItem>TEST</StackItem>
-   </Stack>
-          
+          <Stack hasGutter>
+            <StackItem>
+              <FormGroup
+                label={t('Service account')}
+                isRequired
+                fieldId="service-account-select"
+                labelHelp={
+                  <Popover
+                    bodyContent={t('The service account credential used to connect Advanced Cluster Manager (ACM) to OpenShift Cluster Manager (OCM).')}
+                  >
+                    <Button
+                      variant="plain"
+                      aria-label={t('More info')}
+                      icon={<HelpIcon />}
+                      className="pf-v6-c-form__group-label-help"
+                    />
+                  </Popover>
+                }
+              >
+                <AcmSelectBase
+                  id="service-account-select"
+                  placeholder={t('Select service account')}
+                  selections={selectedSecret?.[0]?.metadata?.name}
+                  onSelect={(value: any) => {
+                    const filtered = credentialsSecrets.filter((secret) => secret.metadata.name === value)
+                    setSelectedSecret(filtered)
+                  }}
+                  onClear={() => setSelectedSecret(undefined)}
+                  width="100%"
+                  menuAppendTo={() => document.body}
+                  footer={
+                    credentialsSecrets.length === 0 ? (
+                      <Flex justifyContent={{ default: "justifyContentCenter" }}>
+                        <FlexItem>
+                          <Button
+                            variant="plain"
+                            isInline
+                            onClick={() => navigate(getTypedCreateCredentialsPath(Provider.redhatcloud))}
+                          >
+                            {t('Add service account')}
+                          </Button>
+                        </FlexItem>
+                      </Flex>
+
+                    ) : <div style={{ boxShadow: '0 -4px 4px -2px rgba(0, 0, 0, 0.1)' }} >
+                      <Button
+                        variant="link"
+                        isInline
+                        icon={<PlusCircleIcon />}
+                        style={{ textDecoration: 'none', marginTop: '3%' }}
+                        onClick={() => navigate(getTypedCreateCredentialsPath(Provider.redhatcloud))}
+                      >
+                        {t('Add service account')}
+                      </Button>
+                    </div>
+                  }
+                >
+                  {credentialsSecrets.length > 0 ? (
+                    credentialsSecrets.map((secret) => (
+                      <SelectOption key={secret.metadata.name} value={secret.metadata.name}>
+                        {secret.metadata.name}
+                      </SelectOption>
+                    ))
+                  ) : (
+                    <EmptyState
+                      titleText={t('No service accounts found')}
+                      variant="xs"
+                      icon={PlusCircleIcon}
+                    >
+                      <EmptyStateBody>
+                        {t('To continue, add a service account for OpenShift Cluster Manager.')}
+                      </EmptyStateBody>
+                    </EmptyState>
+                  )}
+                </AcmSelectBase>
+
+                <FormHelperText>
+                  <HelperText>
+                    <HelperTextItem>
+                      {t('Missing a service account?')}{' '}
+                      <Button
+                        variant="link"
+                        isInline
+                        onClick={() => navigate(getTypedCreateCredentialsPath(Provider.redhatcloud))}
+                      >
+                        {t('Add one')}
+                      </Button>
+                    </HelperTextItem>
+                  </HelperText>
+                </FormHelperText>
+              </FormGroup>
+            </StackItem>
+          </Stack>
+
         </ModalBody>
         <ModalFooter>
-          <Button onClick={nextStep(NavigationPath.createROSAHCP)}>Next</Button>
-          <Button onClick={close}>Cancel</Button>
+          <Button onClick={handleNext} isDisabled={!selectedSecret}>Continue to ROSA cluster creation</Button>
+          <Button variant='secondary' onClick={close}>Cancel</Button>
         </ModalFooter>
       </Modal>
     </AcmPage>

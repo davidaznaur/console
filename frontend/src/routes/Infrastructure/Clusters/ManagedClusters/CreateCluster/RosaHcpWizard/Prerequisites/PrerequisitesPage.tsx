@@ -22,7 +22,7 @@ import {
   Title,
 } from '@patternfly/react-core';
 
-import { AcmPage, AcmPageHeader } from '../../../../../../../ui-components';
+import { AcmExpandableSection, AcmPage, AcmPageHeader } from '../../../../../../../ui-components';
 import { useTranslation } from '../../../../../../../lib/acm-i18next';
 import { NavigationPath } from '../../../../../../../NavigationPath';
 import { DOC_LINKS } from '../../../../../../../lib/doc-util';
@@ -112,6 +112,7 @@ export const PrerequisitesPage = () => {
         {/* ************ Start of AWS prerequisites section ***************** */}
 
         <StackItem>
+          <AcmExpandableSection label="AWS prerequisites" >
           <Card>
             <CardTitle>
               <Title headingLevel="h2">{t('Complete AWS prerequisites')}</Title>
@@ -152,6 +153,7 @@ export const PrerequisitesPage = () => {
               
             </CardBody>
           </Card>
+          </AcmExpandableSection>
         </StackItem>
 
           {/* ************ Start of ROSA prerequisites section ***************** */}
