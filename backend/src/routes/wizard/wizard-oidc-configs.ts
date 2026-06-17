@@ -1,3 +1,6 @@
+
+
+
 /* Copyright Contributors to the Open Cluster Management project */
 import { Http2ServerRequest, Http2ServerResponse } from 'http2'
 import { jsonRequest } from '../../lib/json-request'
@@ -6,7 +9,7 @@ import { respondInternalServerError } from '../../lib/respond'
 import { getOcmServiceToken } from '../../lib/ocmServiceToken'
 import { API_URL } from './constants'
 
-export async function getWizardAccount(req: Http2ServerRequest, res: Http2ServerResponse): Promise<void> {
+export async function getWizardOIDCConfigs(req: Http2ServerRequest, res: Http2ServerResponse): Promise<void> {
   try {
     let data: string = undefined
     const chucks: string[] = []
@@ -22,18 +25,16 @@ export async function getWizardAccount(req: Http2ServerRequest, res: Http2Server
 
       // const accountPath = 'https://api.openshift.com/api/accounts_mgmt/v1/organizations/1wuANBLgbvRSXRXN10OuSFE2gzB/labels'
 
-      const accountPath = `${API_URL}/api/accounts_mgmt/v1/current_account`
+      const accountPath = `${API_URL}/api/clusters_mgmt/v1/oidc_configs?search=aws.account_id=${body.aws_account_id} or aws.account_id=''`
       const request = await jsonRequest(accountPath, accessTokenSSO).catch((err: Error) => {
         logger.error({ msg: 'Failed to fetch account', error: err.message })
         return { error: err.message }
       })
 
+      console.log("SAIFFER **************** OIDC", request)
+
       res.setHeader('Content-Type', 'application/json')
       res.end(JSON.stringify(request))
-
-      // const accReq = await jsonRequest(accountPath, accessTokenSSO).catch((err: Error) => {
-      //     logger.error({ msg: "Error gettting account info", error: err.message })
-      // })
     })
   } catch (err) {
     logger.error(err)

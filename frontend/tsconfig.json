@@ -32,7 +32,14 @@
         "moduleResolution": "node",
         "resolveJsonModule": true,
         "isolatedModules": true,
-        "noEmit": true
+        "noEmit": true,
+
+        "paths": {
+      "@redhat-cloud-services/nxtcm-rosa-hcp-wizard": [
+        "../CONSOLENEXT/nxtcm-components/packages/nxtcm-rosa-hcp-wizard/dist"
+      ]
+    }
+        
     },
     "include": ["src", "webpack.config.ts", "plugins/webpack.plugin.base.ts", "*.ts", "plugins/**/webpack.plugin.ts"],
 }

@@ -16,29 +16,29 @@ const getAWSIDsFromARNs = (arns: any) => {
 };
 
 export const invalidateAWSAccountIDs = () => {
-    queryClient.invalidateQueries({
-              queryKey: ['aws-account-ids-feetch'],
-            })
+  queryClient.invalidateQueries({
+    queryKey: ['aws-account-ids-fetch'],
+  })
 }
 
 type DropdownType = {
-    label: string;
-    value: string;
+  label: string;
+  value: string;
 }
 
 
 export const useFetchAwsAccountIDs = (selectedSecret: any) => {
-    const {data, isLoading, isError, error, refetch} = useQuery({
-        queryKey: ['aws-account-ids-feetch'],
-        queryFn: async() =>{
-            const response = await getWizardAWSAccountIds(selectedSecret.client_id, selectedSecret.client_secret);
-            
+  const { data, isLoading, isError, error, refetch } = useQuery({
+    queryKey: ['aws-account-ids-fetch'],
+    queryFn: async () => {
+      const response = await getWizardAWSAccountIds(selectedSecret.client_id, selectedSecret.client_secret);
 
-            return response;
-        },
-        enabled: !!selectedSecret,
-    })
- const awsAccountIDs = useMemo(() => {
+
+      return response;
+    },
+    enabled: !!selectedSecret,
+  })
+  const awsAccountIDs = useMemo(() => {
     if (!data?.items) return [];
     const stsOCMRoleLabel = data.items.filter(
       (label: any) => label.key === 'sts_ocm_role'
@@ -47,13 +47,13 @@ export const useFetchAwsAccountIDs = (selectedSecret: any) => {
     const arns = stsOCMRoleValue === '' ? [] : stsOCMRoleValue.split(',');
     return getAWSIDsFromARNs(arns);
   }, [data]);
-console.log("******** SAVA smalldata2", data)
-    
-    return {
-        data: awsAccountIDs as DropdownType[],
-        isLoading,
-        isError,
-        error,
-        refetch
-    }
+  console.log("******** SAVA smalldata2", data)
+
+  return {
+    data: awsAccountIDs as DropdownType[],
+    isLoading,
+    isError,
+    error,
+    refetch
+  }
 }

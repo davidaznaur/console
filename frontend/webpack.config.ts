@@ -107,17 +107,17 @@ module.exports = function (env: any, argv: { hot?: boolean; mode: string | undef
       }),
       new webpack.ProvidePlugin({ Buffer: ['buffer', 'Buffer'], process: 'process' }),
       useTsChecker &&
-        new ForkTsCheckerWebpackPlugin({
-          async: true,
-          typescript: {
-            configFile: isDevelopment ? 'tsconfig.dev.json' : 'tsconfig.json',
-          },
-        }),
+      new ForkTsCheckerWebpackPlugin({
+        async: true,
+        typescript: {
+          configFile: isDevelopment ? 'tsconfig.dev.json' : 'tsconfig.json',
+        },
+      }),
       new MonacoWebpackPlugin({ languages: ['yaml'] }),
       isProduction &&
-        new CopyPlugin({
-          patterns: [{ from: 'public', globOptions: { ignore: ['**/*.html', '**/translation.json'] } }],
-        }),
+      new CopyPlugin({
+        patterns: [{ from: 'public', globOptions: { ignore: ['**/*.html', '**/translation.json'] } }],
+      }),
       isProduction && new CompressionPlugin({ algorithm: 'gzip' }),
       isProduction && new CompressionPlugin({ algorithm: 'brotliCompress', filename: '[path][base].br' }),
       isDevelopment && new ReactRefreshWebpackPlugin(),
@@ -170,7 +170,17 @@ module.exports = function (env: any, argv: { hot?: boolean; mode: string | undef
         '/multicloud/hub',
         '/multicloud/upgrade-risks-prediction',
         '/multicloud/multiregion-regions',
+        '/multicloud/cloud-providers',
+        '/multicloud/openshift-versions',
         '/multicloud/aws-account-ids',
+        '/multicloud/vpcs',
+        '/multicloud/machine-types',
+        '/multicloud/oidc-configs',
+        '/multicloud/sts-ocm-role',
+        '/multicloud/sts-role-arns',
+        '/multicloud/sts-user-role',
+        '/multicloud/aws-billing-accounts',
+        '/multicloud/cluster-name-check',
         '/multicloud/login',
         '/multicloud/logout',
         '/multicloud/observability',

@@ -64,7 +64,7 @@ import {
 import { WizSelect } from '@patternfly-labs/react-form-wizard'
 import { useFetchRegions } from './useFetchRegions'
 
-import { RosaHCPWizard } from 'nxtcm-components'
+import { RosaHCPWizard } from '@redhat-cloud-services/nxtcm-rosa-hcp-wizard/src';
 import { useRhocmSecrets } from '../../../hooks/useServiceAccount'
 import { useFetchAwsAccountIDs } from './useFetchAwsAccountIDs'
 

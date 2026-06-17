@@ -5,7 +5,7 @@ import { logger } from '../../lib/logger'
 import { respondInternalServerError } from '../../lib/respond'
 import { getOcmServiceToken } from '../../lib/ocmServiceToken'
 
-export function getWizardRegions(req: Http2ServerRequest, res: Http2ServerResponse): Promise<void> {
+export function getWizardRegions(req: Http2ServerRequest, res: Http2ServerResponse) {
   try {
     let data: string = undefined
     const chucks: string[] = []

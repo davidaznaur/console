@@ -6,7 +6,7 @@ import { respondInternalServerError } from '../../lib/respond'
 import { getOcmServiceToken } from '../../lib/ocmServiceToken'
 import { API_URL } from './constants'
 
-export async function getWizardAccount(req: Http2ServerRequest, res: Http2ServerResponse): Promise<void> {
+export function getWizardCloudProviders(req: Http2ServerRequest, res: Http2ServerResponse) {
   try {
     let data: string = undefined
     const chucks: string[] = []
@@ -17,23 +17,17 @@ export async function getWizardAccount(req: Http2ServerRequest, res: Http2Server
     req.on('end', async () => {
       data = chucks.join()
       const body = JSON.parse(data)
-
+      console.log('****************** DAVID BODY **************', body)
       const accessTokenSSO = await getOcmServiceToken(body.service_account_id, body.service_account_secret)
 
-      // const accountPath = 'https://api.openshift.com/api/accounts_mgmt/v1/organizations/1wuANBLgbvRSXRXN10OuSFE2gzB/labels'
-
-      const accountPath = `${API_URL}/api/accounts_mgmt/v1/current_account`
-      const request = await jsonRequest(accountPath, accessTokenSSO).catch((err: Error) => {
-        logger.error({ msg: 'Failed to fetch account', error: err.message })
+      const cloudProvidersPath = `${API_URL}/api/clusters_mgmt/v1/cloud_providers?size=-1&fetchRegions=true`
+      const request = await jsonRequest(cloudProvidersPath, accessTokenSSO).catch((err: Error) => {
+        logger.error({ msg: 'Failed to fetch regions', error: err.message })
         return { error: err.message }
       })
-
+ console.log('******************** DAVID *******************', request)
       res.setHeader('Content-Type', 'application/json')
       res.end(JSON.stringify(request))
-
-      // const accReq = await jsonRequest(accountPath, accessTokenSSO).catch((err: Error) => {
-      //     logger.error({ msg: "Error gettting account info", error: err.message })
-      // })
     })
   } catch (err) {
     logger.error(err)

@@ -33,7 +33,15 @@ import { virtualMachineGETProxy, virtualMachineProxy, vmResourceUsageProxy } fro
 import { managedClusterProxy } from './routes/managedClusterProxy'
 import { hypershiftStatus } from './routes/hypershift-status'
 import { clusterVersion } from './routes/clusterVersion'
-import { getAwsAccountIds, getTestDataOCM } from './routes/wizard-regions'
+import { getWizardVersions } from './routes/wizard/wizard-versions'
+import { getWizardRegions } from './routes/wizard/wizard-regions'
+import { getWizardCloudProviders } from './routes/wizard/wizard-cloud-providers'
+import { getAwsAccountIds, getAwsBillingAccountIds } from './routes/wizard/wizard-aws-accounts'
+import { getOCMRoleARN, getRoleARNs, getUserRole } from './routes/wizard/wizard-role-arns'
+import { getClusterNameCheck } from './routes/wizard/wizard-cluster-name'
+import { getWizardOIDCConfigs } from './routes/wizard/wizard-oidc-configs'
+import { getWizardVPCs } from './routes/wizard/wizard-vpc'
+import { getWizardMachineTypes } from './routes/wizard/wizard-machine-types'
 
 const isProduction = process.env.NODE_ENV === 'production'
 const isDevelopment = process.env.NODE_ENV === 'development'
@@ -74,8 +82,18 @@ router.get('/hub', hub)
 router.get('/hypershift-status', hypershiftStatus)
 router.get('/cluster-version', clusterVersion)
 router.post('/upgrade-risks-prediction', upgradeRiskPredictions)
-router.post('/multiregion-regions', getTestDataOCM)
+router.post('/multiregion-regions', getWizardRegions)
+router.post('/openshift-versions', getWizardVersions)
 router.post('/aws-account-ids', getAwsAccountIds)
+router.post('/cloud-providers', getWizardCloudProviders)
+router.post('/sts-role-arns',getRoleARNs)
+router.post('/sts-ocm-role', getOCMRoleARN)
+router.post('/machine-types', getWizardMachineTypes)
+router.post('/sts-user-role', getUserRole)
+router.post('/aws-billing-accounts', getAwsBillingAccountIds)
+router.post('/cluster-name-check', getClusterNameCheck)
+router.post('/oidc-configs', getWizardOIDCConfigs)
+router.post('/vpcs', getWizardVPCs)
 router.post('/aggregate/*', aggregate)
 router.get('/virtualmachines/get/*', virtualMachineGETProxy)
 router.all('/virtualmachines/*', virtualMachineProxy)
