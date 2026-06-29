@@ -202,6 +202,7 @@ module.exports = function (env: any, argv: { hot?: boolean; mode: string | undef
         '/multicloud/virtualmachinesnapshots',
         '/multicloud/virtualmachinerestores',
         '/multicloud/multiclusterhub/components',
+        '/multicloud/multiclusterengine/components',
         '/multicloud/vmResourceUsage',
         '/multicloud/managedclusterproxy',
       ].map((backendPath) => ({

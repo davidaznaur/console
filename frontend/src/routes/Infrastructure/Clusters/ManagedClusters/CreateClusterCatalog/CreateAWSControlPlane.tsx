@@ -9,7 +9,7 @@ import {
 } from '@stolostron/react-data-view'
 import { useRecoilValue, useSharedAtoms } from '../../../../../shared-recoil';
 import { Link, useLocation, useNavigate } from 'react-router-dom-v5-compat'
-import React, { useCallback, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from '../../../../../lib/acm-i18next'
 import { useDataViewStrings } from '../../../../../lib/dataViewStrings'
 import { DOC_LINKS } from '../../../../../lib/doc-util'
@@ -17,6 +17,7 @@ import { NavigationPath, useBackCancelNavigation } from '../../../../../Navigati
 import { AcmPage, AcmPageHeader, Provider } from '../../../../../ui-components'
 import { getTypedCreateClusterPath } from '../ClusterInfrastructureType'
 import { useIsHypershiftEnabled } from '../../../../../hooks/use-hypershift-enabled'
+import { useMCEComponents } from '../../../../../hooks/use-mce-components'
 import { HypershiftDiagramExpand } from './common/HypershiftDiagramExpand'
 import { Button, Icon, Stack, Modal, ModalBody, ModalFooter, ModalHeader, SelectOption, StackItem, Title, Content, ContentVariants, EmptyState, EmptyStateBody, EmptyStateFooter, FlexItem, Flex, Popover, FormGroup, FormHelperText, HelperText, HelperTextItem, Card, CardTitle, CardBody, List, ListItem, CardFooter } from '@patternfly/react-core'
 import CreateROSAHCPButton from '../CreateCluster/RosaHcpWizard/CreateROSAHcpButton/CreateROSAHCPButton';
@@ -33,6 +34,13 @@ export function CreateAWSControlPlane() {
   const [isDiagramExpanded, setIsDiagramExpanded] = useState(true)
   const [isMouseOverControlPlaneLink, setIsMouseOverControlPlaneLink] = useState(false)
   const [isHypershiftEnabled, loaded] = useIsHypershiftEnabled()
+  const [mceComponents, mceLoaded] = useMCEComponents()
+
+  useEffect(() => {
+    if (mceLoaded) {
+      console.log('MCE Components:', mceComponents)
+    }
+  }, [mceComponents, mceLoaded])
   //const noAvailableHostsAlert = useNoAvailableHostsAlert('hosted')
 
   const { secretsState } = useSharedAtoms()

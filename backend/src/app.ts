@@ -19,6 +19,7 @@ import { events, startWatching, stopWatching } from './routes/events'
 import { hub } from './routes/hub'
 import { liveness } from './routes/liveness'
 import { observabilityProxy, prometheusProxy } from './routes/metricsProxy'
+import { multiClusterEngineComponents } from './routes/multiClusterEngineComponents'
 import { multiClusterHubComponents } from './routes/multiClusterHubComponents'
 import { login, loginCallback, logout } from './routes/oauth'
 import { operatorCheck } from './routes/operatorCheck'
@@ -103,6 +104,7 @@ router.all('/virtualmachinesnapshots/*', virtualMachineProxy)
 router.all('/virtualmachinerestores', virtualMachineProxy)
 router.get('/vmResourceUsage/cluster/:cluster/namespace/:namespace', vmResourceUsageProxy)
 router.get('/multiclusterhub/components', multiClusterHubComponents)
+router.get('/multiclusterengine/components', multiClusterEngineComponents)
 router.all('/managedclusterproxy/*', managedClusterProxy)
 router.get('/*', serveHandler)
 
