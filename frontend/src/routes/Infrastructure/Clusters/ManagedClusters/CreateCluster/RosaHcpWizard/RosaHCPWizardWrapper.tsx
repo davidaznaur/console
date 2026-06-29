@@ -51,7 +51,7 @@ export const RosaHCPWizardWrapper = () => {
   const { data: awsAccountsIDs, isLoading: isAwsAccountsDataLoading, refetch: refetchAwsAccounts } = useFetchAwsAccountIDs(data)
   const { data: versions, isLoading: isVersionsLoading, refetch: refetchVersions } = useFetchHCPVersions(data)
   const { data: cloudProviders, isLoading: isCloudProvidersLoading, error: cloudProvidersError, refetch: refetchCloudProviders } = useFetchRegions(data)
-  const { data: accountRoleARNs,ocmRoleError: ocmRoleError, userRoleError: userRoleQueryError, ocmRole: ocmRoleARN, userRole: userRoleARN, refetch: refetchUserRoleARNs, error: rolesError } = useFetchRoleARNs(data)
+  const { data: accountRoleARNs, ocmRoleError, userRoleError, ocmRole: ocmRoleARN, userRole: userRoleARN, refetch: refetchUserRoleARNs, error: rolesError } = useFetchRoleARNs(data)
   const {data: oidcConfigs, isLoading: isOIDCConfigsLoading, error: oidcConfigsError, fetch: fetchOIDCConfigs} = useFetchOIDCConfigs(data)
   const { data: vpcData, isLoading: isVpcListLoading, error: vpcListError,
   fetch: fetchVpcList } = useFetchVPCs(data);
@@ -126,7 +126,7 @@ const checkClusterNameUniqueness = useCallback(
       }
     >
       <div style={{ height: '100%' }}>
-        <RosaHCPWizard title="ROSA HCP WIZARD" onSubmit={async () => console.log("SUBMIT")} onCancel={() => console.log("CANCEL")}
+        <RosaHCPWizard yaml={true} title="ROSA HCP WIZARD" onSubmit={async () => console.log("SUBMIT")} onCancel={() => console.log("CANCEL")}
           wizardData={{
             checkClusterNameUniqueness,
             awsInfrastructureAccounts: {
@@ -164,6 +164,9 @@ const checkClusterNameUniqueness = useCallback(
             roles: {
               data: accountRoleARNs,
               error: rolesError,
+              ocmRoleError: ocmRoleError,
+              ocmRoleARN: ocmRoleARN?.body?.arn,
+              userRoleError: userRoleError,
               isFetching: false,
               fetch: handleRolesFetch,
             },

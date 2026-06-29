@@ -51,6 +51,12 @@ module.exports = function (env: any, argv: { hot?: boolean; mode: string | undef
     },
     module: {
       rules: [
+        {
+          test: /\.m?js$/,
+          resolve: {
+            fullySpecified: false,
+          },
+        },
         { test: /\.(hbs|yaml)$/, type: 'asset/source' },
         {
           type: 'asset',

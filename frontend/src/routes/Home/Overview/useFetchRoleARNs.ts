@@ -175,31 +175,22 @@ export const useFetchRoleARNs = (selectedSecret: any) => {
     ])
   }, [rolesQuery.refetch, ocmRoleQuery.refetch, userRoleQuery.refetch]);
 
-  const rolesQueryError = {
-    error: rolesQuery.data?.error ?? (rolesQuery.error instanceof Error ? rolesQuery.error.message : null),
-    type: 'roles query'
-  }
-  const ocmRoleQueryError = {
-    error: (ocmRoleQuery.error instanceof Error ? ocmRoleQuery.error.message : null),
-    type: 'ocm query'
-  }
-
-  const userRoleQueryError = {
-    error: (userRoleQuery.error instanceof Error ? userRoleQuery.error.message === "AccountLabel with key='sts_user_role' not found" ? "Pleasea create required user roles" : null : null),
-    type: 'user query'
-  }
-
   console.log("QUERY RESULT ocmRoleQuery",ocmRoleQuery)
    console.log("QUERY RESULT userRoleQuery",userRoleQuery)
     console.log("QUERY RESULT rolesQuery",rolesQuery)
+
+  const ocmRoleError = (ocmRoleQuery.error instanceof Error ? ocmRoleQuery.error.message : null);
+  const userRoleError = (userRoleQuery.error instanceof Error ? userRoleQuery.error.message === "AccountLabel with key='sts_user_role' not found" ? "User role was not found" : null : null)
+  const rolesError = rolesQuery.data?.error ?? (rolesQuery.error instanceof Error ? rolesQuery.error.message : null)
+
   return {
     data: Array.isArray(rolesQuery.data?.roles) ? rolesQuery.data.roles : [],
     ocmRole: ocmRoleQuery.data ?? null,
     userRole: userRoleQuery.data ?? null,
     isLoading: rolesQuery.isLoading || ocmRoleQuery.isLoading,
-    error: rolesQuery.data?.error ?? (rolesQuery.error instanceof Error ? rolesQuery.error.message : null) ?? null,
-    ocmRoleError: ocmRoleQueryError ?? null,
-    userRoleError: userRoleQueryError ?? null,
+    error: rolesError,
+    ocmRoleError: ocmRoleError,
+    userRoleError: userRoleError,
     refetch: refetchAll,
     fetch,
   }

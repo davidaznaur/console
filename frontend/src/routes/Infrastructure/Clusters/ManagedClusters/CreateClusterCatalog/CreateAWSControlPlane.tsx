@@ -8,7 +8,7 @@ import {
   ItemView,
 } from '@stolostron/react-data-view'
 import { useRecoilValue, useSharedAtoms } from '../../../../../shared-recoil';
-import { useLocation, useNavigate } from 'react-router-dom-v5-compat'
+import { Link, useLocation, useNavigate } from 'react-router-dom-v5-compat'
 import React, { useCallback, useMemo, useState } from 'react'
 import { useTranslation } from '../../../../../lib/acm-i18next'
 import { useDataViewStrings } from '../../../../../lib/dataViewStrings'
@@ -18,12 +18,14 @@ import { AcmPage, AcmPageHeader, Provider } from '../../../../../ui-components'
 import { getTypedCreateClusterPath } from '../ClusterInfrastructureType'
 import { useIsHypershiftEnabled } from '../../../../../hooks/use-hypershift-enabled'
 import { HypershiftDiagramExpand } from './common/HypershiftDiagramExpand'
-import { Button, Icon, Stack, Modal, ModalBody, ModalFooter, ModalHeader, SelectOption, StackItem, Title, Content, ContentVariants, EmptyState, EmptyStateBody, EmptyStateFooter, FlexItem, Flex, Popover, FormGroup, FormHelperText, HelperText, HelperTextItem } from '@patternfly/react-core'
+import { Button, Icon, Stack, Modal, ModalBody, ModalFooter, ModalHeader, SelectOption, StackItem, Title, Content, ContentVariants, EmptyState, EmptyStateBody, EmptyStateFooter, FlexItem, Flex, Popover, FormGroup, FormHelperText, HelperText, HelperTextItem, Card, CardTitle, CardBody, List, ListItem, CardFooter } from '@patternfly/react-core'
 import CreateROSAHCPButton from '../CreateCluster/RosaHcpWizard/CreateROSAHcpButton/CreateROSAHCPButton';
 import useNoAvailableHostsAlert from '../../../../../hooks/use-available-hosts-alert';
 import { AcmSelectBase } from '../../../../../components/AcmSelectBase';
 import { getTypedCreateCredentialsPath } from '../../../../Credentials/CreateCredentialsCatalog';
 
+
+const CreateButtonLink = (props: any) => <Link {...props} to={NavigationPath.prerequisites} />;
 export function CreateAWSControlPlane() {
   const [t] = useTranslation()
   const navigate = useNavigate()
@@ -62,6 +64,90 @@ export function CreateAWSControlPlane() {
 
   const withCliClick = nextStep((NavigationPath.createAWSCLI))
 
+  const HostedCard = () => {
+    return(
+      <Flex direction={{default: 'row'}} alignItems={{ default: 'alignItemsStretch' }}>
+        <FlexItem flex={{ default: 'flex_1' }}>
+      <Card isFullHeight>
+        <CardTitle>
+        <Content component={ContentVariants.h4}>ROSA</Content>
+        <Content component={ContentVariants.p}>Managed by Red Hat</Content>
+        </CardTitle>
+        <CardBody>
+          <Stack hasGutter>
+            <StackItem>
+    <List>
+            <ListItem>
+              Red Hat SRE managed
+            </ListItem>
+            <ListItem>
+              Zero-cost control plane infra
+            </ListItem>
+            <ListItem>
+              Full compliance certifications
+            </ListItem>
+          </List>
+            </StackItem>
+
+            <StackItem>
+              <Stack hasGutter>
+                <StackItem>
+ <Button variant='primary' onClick={() => setIsModalOpen(true)}>
+            Deploy with web interface
+          </Button>
+                </StackItem>
+
+                <StackItem>
+   <Button
+                    variant="link"
+                    className="create-button"
+                    component={CreateButtonLink}
+                  >
+                    View ROSA prerequisites
+                  </Button>
+                </StackItem>
+              </Stack>
+  
+               
+            </StackItem>
+          </Stack>
+      
+       
+{/* <CreateROSAHCPButton onCliClick={withCliClick} onInterfaceClick={setIsModalOpen} /> */}
+        </CardBody>
+      </Card>
+        </FlexItem>
+      
+      <FlexItem flex={{ default: 'flex_1' }}>
+              <Card isFullHeight>
+        <CardTitle>
+      <Content component={ContentVariants.h4}>AWS (self managed)</Content>
+       <Content component={ContentVariants.p}>Managed by you</Content>
+        </CardTitle>
+        <CardBody>
+        <Stack hasGutter>
+          <StackItem>
+            <List>
+              <ListItem>
+        Efficiently reuse existing OpenShift clusters to host multiple control planes
+              </ListItem>
+              <ListItem>
+                Fully self-managed control
+              </ListItem>
+            </List>
+          </StackItem>
+        </Stack>
+        </CardBody>
+        <CardFooter>
+          <Button variant='primary' onClick={() => withCliClick()}>Deploy with CLI</Button>
+        </CardFooter>
+      </Card>
+      </FlexItem>
+
+
+      </Flex>
+    )
+  }
 
 
   const cards = useMemo(() => {
@@ -94,7 +180,7 @@ export function CreateAWSControlPlane() {
           {
             type: CatalogCardItemType.Description,
             description: (
-              <CreateROSAHCPButton onCliClick={withCliClick} onInterfaceClick={setIsModalOpen} />
+              <HostedCard />
             ) as unknown as string,
           },
         ],
