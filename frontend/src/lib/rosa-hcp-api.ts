@@ -29,3 +29,5 @@ export const getWizardAWSAccountIds = (client_id: string, client_secret: string,
   getWizardData(client_id, client_secret, '/aws-account-ids', additionalData)
 export const getWizardAwsBillingAccounts = (client_id: string, client_secret: string, additionalData?: any) =>
   getWizardData(client_id, client_secret, '/aws-billing-accounts', additionalData)
+export const getWizardRegions = (client_id: string, client_secret: string, additionalData?: any) =>
+  getWizardData(client_id, client_secret, '/regions', additionalData)

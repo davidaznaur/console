@@ -5,4 +5,5 @@ export const rosaWizardKeys = {
   all: [ROSA_HCP_WIZARD_QUERY_KEY],
   awsInfrastructureAccounts: () => [...rosaWizardKeys.all, 'aws-account-ids-fetch'],
   awsBillingAccounts: () => [...rosaWizardKeys.all, 'aws-billing-ids-fetch'],
+  regions: () => [...rosaWizardKeys.all, 'regions'],
 }
