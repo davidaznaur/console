@@ -1,6 +1,7 @@
 import { useSharedReactQuery } from '~/hooks/shared-react-query'
 import { getWizardRegions } from '~/lib/rosa-hcp-api'
 import { DropdownType, SelectedSecret } from '../constants/types'
+import { rosaWizardKeys } from './queryKeyFactory'
 
 type CloudRegion = {
   kind?: string
@@ -45,14 +46,11 @@ const hcpCloudProvidersAndRegions = (cloudProvidersResponse: CloudProviderRespon
 }
 
 export const useFetchRegions = (selectedSecret: SelectedSecret) => {
-  console.log('SELECTEDSECRET', selectedSecret)
   const { useQuery } = useSharedReactQuery()
   const { data, isLoading, isError, error, refetch } = useQuery({
-    queryKey: ['cloud-providers'],
+    queryKey: rosaWizardKeys.regions(),
     queryFn: async () => {
       const response = await getWizardRegions(selectedSecret.client_id, selectedSecret.client_secret)
-
-      console.log('******** SAVA regions', response)
 
       return response ?? []
     },
