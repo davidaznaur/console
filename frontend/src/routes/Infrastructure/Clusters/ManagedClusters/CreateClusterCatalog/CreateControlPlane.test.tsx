@@ -83,7 +83,7 @@ describe('CreateControlPlane', () => {
     await waitForNocks([hypershiftStatusNock])
 
     const card = getByTestId('hosted')
-    expect(isCardEnabled(card)).toBe(true)
+    await waitFor(() => expect(isCardEnabled(card)).toBe(true))
   })
 
   test('Hosted control plane card should be enabled when hypershift is enabled and there are available hosts', async () => {
@@ -95,7 +95,7 @@ describe('CreateControlPlane', () => {
     await waitForNocks([hypershiftStatusNock])
 
     const card = getByTestId('hosted')
-    expect(isCardEnabled(card)).toBe(true)
+    await waitFor(() => expect(isCardEnabled(card)).toBe(true))
     await clickByTestId('hosted')
   })
 

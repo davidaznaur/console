@@ -108,4 +108,57 @@ describe('rosaWizardApi routes', () => {
       expect(res.statusCode).toEqual(401)
     })
   })
+
+  describe('POST /regions', () => {
+    test('should return cloud providers with regions', async () => {
+      const cloudProvidersResponse = {
+        items: [
+          {
+            id: 'aws',
+            name: 'AWS',
+            regions: [
+              { id: 'us-east-1', name: 'US East (N. Virginia)' },
+              { id: 'eu-west-1', name: 'EU (Ireland)' },
+            ],
+          },
+        ],
+      }
+
+      nockAuth()
+      nockSsoToken()
+      nock(API_HOST)
+        .get('/api/clusters_mgmt/v1/cloud_providers?size=-1&fetchRegions=true')
+        .reply(200, cloudProvidersResponse)
+
+      const res = await request('POST', '/regions', mockPayload)
+      expect(res.statusCode).toEqual(200)
+
+      const body = await parsePipedJsonBody(res)
+      expect(body).toEqual(cloudProvidersResponse)
+    })
+
+    test('should return error when cloud providers request fails', async () => {
+      nockAuth()
+      nockSsoToken()
+      nock(API_HOST)
+        .get('/api/clusters_mgmt/v1/cloud_providers?size=-1&fetchRegions=true')
+        .replyWithError('Network error')
+
+      const res = await request('POST', '/regions', mockPayload)
+      expect(res.statusCode).toEqual(200)
+
+      const body = await parsePipedJsonBody(res)
+      expect(body).toEqual({
+        error:
+          'request to https://api.openshift.com/api/clusters_mgmt/v1/cloud_providers?size=-1&fetchRegions=true failed, reason: Network error',
+      })
+    })
+
+    test('should return 401 when not authenticated', async () => {
+      nock(process.env.CLUSTER_API_URL).get('/apis').reply(401)
+
+      const res = await request('POST', '/regions', mockPayload)
+      expect(res.statusCode).toEqual(401)
+    })
+  })
 })

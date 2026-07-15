@@ -1,38 +1,10 @@
+/* Copyright Contributors to the Open Cluster Management project */
+
 import { useSharedReactQuery } from '~/hooks/shared-react-query'
+import type { CloudProviderResponse } from '~/lib/rosa-hcp-api'
 import { getWizardRegions } from '~/lib/rosa-hcp-api'
 import { DropdownType, SelectedSecret } from '../constants/types'
 import { rosaWizardKeys } from './queryKeyFactory'
-
-type CloudRegion = {
-  kind?: string
-  id?: string
-  href?: string
-  ccs_only?: boolean
-  kms_location_id?: string
-  kms_location_name?: string
-  cloud_provider?: CloudProvider
-  display_name?: string
-  enabled?: boolean
-  govcloud?: boolean
-  name?: string
-  supports_hypershift?: boolean
-  supports_multi_az?: boolean
-}
-type CloudProvider = {
-  kind?: string
-  id?: string
-  href?: string
-  display_name?: string
-  name?: string
-  regions?: CloudRegion[]
-}
-
-type CloudProviderResponse = {
-  items?: Array<CloudProvider>
-  page?: number
-  size?: number
-  total?: number
-}
 
 const hcpCloudProvidersAndRegions = (cloudProvidersResponse: CloudProviderResponse): DropdownType[] => {
   const awsProvider = cloudProvidersResponse.items?.find((provider) => provider.id === 'aws')
@@ -49,12 +21,13 @@ export const useFetchRegions = (selectedSecret: SelectedSecret) => {
   const { useQuery } = useSharedReactQuery()
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: rosaWizardKeys.regions(),
-    queryFn: async () => {
-      const response = await getWizardRegions(selectedSecret.client_id, selectedSecret.client_secret)
+    queryFn: async ({ signal }) => {
+      const response = await getWizardRegions(selectedSecret.client_id, selectedSecret.client_secret, signal)
 
       return response ?? []
     },
     enabled: !!selectedSecret,
+    retry: false,
     select: hcpCloudProvidersAndRegions,
   })
 
