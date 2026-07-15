@@ -1,76 +1,13 @@
 /* Copyright Contributors to the Open Cluster Management project */
 
+import type {
+  AwsAccountIdsResponse,
+  CloudProviderResponse,
+  OrganizationQuotaResponse,
+  WizardBasePayload,
+  WizardErrorResponse,
+} from '~/resources'
 import { fetchRetry, getBackendUrl } from '~/resources/utils'
-
-export interface CloudRegion {
-  kind?: string
-  id?: string
-  href?: string
-  ccs_only?: boolean
-  kms_location_id?: string
-  kms_location_name?: string
-  cloud_provider?: CloudProvider
-  display_name?: string
-  enabled?: boolean
-  govcloud?: boolean
-  name?: string
-  supports_hypershift?: boolean
-  supports_multi_az?: boolean
-}
-
-export interface CloudProvider {
-  kind?: string
-  id?: string
-  href?: string
-  display_name?: string
-  name?: string
-  regions?: CloudRegion[]
-}
-
-export interface CloudProviderResponse {
-  items?: CloudProvider[]
-  page?: number
-  size?: number
-  total?: number
-}
-
-export interface OrganizationLabel {
-  id: string
-  internal: boolean
-  key: string
-  organization_id: string
-  type: string
-  value: string
-}
-
-export interface AwsAccountIdsResponse {
-  items?: OrganizationLabel[]
-}
-
-export interface CloudAccount {
-  cloud_account_id: string
-  cloud_provider_id: string
-}
-
-export interface OrganizationQuota {
-  quota_id: string
-  cloud_accounts: CloudAccount[]
-}
-
-export interface OrganizationQuotaResponse {
-  items?: OrganizationQuota[]
-}
-
-interface WizardBasePayload {
-  service_account_id: string
-  service_account_secret: string
-}
-
-interface WizardErrorResponse {
-  kind?: string
-  reason?: string
-  body?: { kind?: string; reason?: string }
-}
 
 function isWizardError(data: unknown): data is WizardErrorResponse {
   const d = data as WizardErrorResponse

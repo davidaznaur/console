@@ -1,9 +1,9 @@
 /* Copyright Contributors to the Open Cluster Management project */
-import type { CloudAccount, OrganizationQuota } from '~/lib/rosa-hcp-api'
 import { getWizardAwsBillingAccounts } from '~/lib/rosa-hcp-api'
 import { SelectedSecret } from '../constants/types'
 import { useSharedReactQuery } from '~/hooks/shared-react-query'
 import { rosaWizardKeys } from './queryKeyFactory'
+import { CloudAccount, OrganizationQuota } from '~/resources'
 
 const getAwsBillingAccountsFromQuota = (items?: OrganizationQuota[]): { value: string; label: string }[] => {
   const foundAwsBillingAccounts =

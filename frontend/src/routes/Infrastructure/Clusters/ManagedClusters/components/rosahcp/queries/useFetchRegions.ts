@@ -1,10 +1,10 @@
 /* Copyright Contributors to the Open Cluster Management project */
 
 import { useSharedReactQuery } from '~/hooks/shared-react-query'
-import type { CloudProviderResponse } from '~/lib/rosa-hcp-api'
 import { getWizardRegions } from '~/lib/rosa-hcp-api'
 import { DropdownType, SelectedSecret } from '../constants/types'
 import { rosaWizardKeys } from './queryKeyFactory'
+import { CloudProviderResponse } from '~/resources'
 
 const hcpCloudProvidersAndRegions = (cloudProvidersResponse: CloudProviderResponse): DropdownType[] => {
   const awsProvider = cloudProvidersResponse.items?.find((provider) => provider.id === 'aws')

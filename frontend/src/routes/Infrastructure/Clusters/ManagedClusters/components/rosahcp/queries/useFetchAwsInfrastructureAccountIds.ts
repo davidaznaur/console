@@ -1,10 +1,10 @@
 /* Copyright Contributors to the Open Cluster Management project */
 import { useMemo } from 'react'
-import type { OrganizationLabel } from '~/lib/rosa-hcp-api'
 import { getWizardAWSAccountIds } from '~/lib/rosa-hcp-api'
 import { SelectedSecret } from '../constants/types'
 import { useSharedReactQuery } from '~/hooks/shared-react-query'
 import { rosaWizardKeys } from './queryKeyFactory'
+import { OrganizationLabel } from '~/resources'
 
 const extractAWSID = (arn: string): string => {
   // Ex: arn = 'arn:aws:iam::268733382466:role/ManagedOpenShift-OCM-Role-15212158'
@@ -12,7 +12,6 @@ const extractAWSID = (arn: string): string => {
   const startIndex = arn.indexOf('::') + 2
   const arnSegment = arn.slice(startIndex)
   return arnSegment.slice(0, arnSegment.indexOf(':'))
-
 }
 
 const getAWSIDsFromARNs = (arns: string[]): string[] => {
